@@ -94,7 +94,7 @@ extension NFA {
     }
     
     func then(_ next: NFA) -> NFA {
-        
+        return self
     }
 }
 
