@@ -4,37 +4,44 @@
 
 
 struct NFA<Symbol> {
-    let startState: State
-    let acceptanceStates: Set<State>
-    let isInverted: Bool
+    let initialStates: Set<State>
+    let activeAcceptance: Set<State>
+    let inactiveAcceptance: Set<State>
     
-    let activeEdges: [State: PredicatedStates]
-    let inactiveEdges: [State: PredicatedStates]
+    let activeEdges: [State: SubsequentStates]
+    let inactiveEdges: [State: SubsequentStates]
     
-    struct PredicatedStates {
-        let states: [State: [(Symbol) -> Bool]]
+    struct SubsequentStates {
+        let predicated: [State: [(Symbol) -> Bool]]
+        let always: Set<State>
+        
+        init(predicated: [State: [(Symbol) -> Bool]] = [:], always: Set<State> = Set()) {
+            self.predicated = predicated
+            self.always = always
+        }
     }
     
     class State {}
     
+    typealias PredicatedStates = [State: (Symbol) -> Bool]
     typealias MachineState = Set<State>
     
     init(
-        startState: State,
-        acceptanceStates: Set<State>,
-        isInverted: Bool = false,
-        activeEdges: [State: PredicatedStates],
-        inactiveEdges: [State: PredicatedStates] = [:]
+        initialStates: Set<State>,
+        activeAcceptance: Set<State> = Set(),
+        inactiveAcceptance: Set<State> = Set(),
+        activeEdges: [State: SubsequentStates] = [:],
+        inactiveEdges: [State: SubsequentStates] = [:]
     ) {
-        self.startState = startState
-        self.acceptanceStates = acceptanceStates
-        self.isInverted = isInverted
+        self.initialStates = initialStates
+        self.activeAcceptance = activeAcceptance
+        self.inactiveAcceptance = inactiveAcceptance
         self.activeEdges = activeEdges
         self.inactiveEdges = inactiveEdges
     }
     
     func matches<S: Sequence>(_ symbols: S) -> Bool where S.Element == Symbol {
-        let initialState = Set([startState])
+        let initialState = initialStates
         let finalState = symbols.reduce(initialState, self.step(state:with:))
         return stateRepresentsAcceptance(finalState)
     }
@@ -44,14 +51,13 @@ struct NFA<Symbol> {
     }
     
     func stateRepresentsAcceptance(_ activeStates: MachineState) -> Bool {
-        let hasAcceptanceStates = activeStates.intersection(acceptanceStates).isEmpty == false
-        return hasAcceptanceStates != isInverted
+        activeStates.includesAnyOf(activeAcceptance) || activeStates.missesAnyOf(inactiveAcceptance)
     }
     
-    private func possibleSubsequentStates(followingActiveStates activeStates: MachineState) -> PredicatedStates {
+    private func possibleSubsequentStates(followingActiveStates activeStates: MachineState) -> SubsequentStates {
         let activated = activeStates.compactMap { activeEdges[$0] }
         let innactivated = inactiveEdges.compactMap { activeStates.contains($0.key) ? nil : $0.value }
-        return (activated + innactivated).reduce(PredicatedStates()) { $0.merging($1) }
+        return (activated + innactivated).reduce(SubsequentStates()) { $0.merging($1) }
     }
 }
 
@@ -62,14 +68,14 @@ extension NFA {
     static var everything: NFA {
         let initial = NFA.State()
         return NFA(
-            startState: initial,
-            acceptanceStates: Set([initial]),
-            activeEdges: [initial: PredicatedStates(states: [initial: [{ _ in true }]])]
+            initialStates: Set([initial]),
+            activeAcceptance: Set([initial]),
+            activeEdges: [initial: SubsequentStates(predicated: [initial: [{ _ in true }]])]
         )
     }
     
     static var nothing: NFA {
-        everything.inverted
+        !everything
     }
     
     static func match(one predicate: @escaping (Symbol) -> Bool) -> NFA {
@@ -77,19 +83,34 @@ extension NFA {
         let acceptState = NFA.State()
         
         return NFA(
-            startState: startState,
-            acceptanceStates: Set([acceptState]),
-            activeEdges: [startState: PredicatedStates(states: [acceptState: [predicate]])]
+            initialStates: Set([startState]),
+            activeAcceptance: Set([acceptState]),
+            activeEdges: [startState: SubsequentStates(predicated: [acceptState: [predicate]])]
+        )
+    }
+    
+    static func |(_ l: NFA, _ r: NFA) -> NFA {
+        .init(
+            initialStates: l.initialStates.union(r.initialStates),
+            activeAcceptance: l.activeAcceptance.union(r.activeAcceptance),
+            inactiveAcceptance: l.inactiveAcceptance.union(r.inactiveAcceptance),
+            activeEdges: l.activeEdges.merging(r.activeEdges, uniquingKeysWith: { $0.merging($1) }),
+            inactiveEdges: l.inactiveEdges.merging(r.inactiveEdges, uniquingKeysWith: { $0.merging($1) })
         )
     }
 
-    var inverted: NFA {
+    static func &(_ l: NFA, _ r: NFA) -> NFA {
+        !(!l | !r)
+    }
+
+
+    static prefix func !(_ nfa: NFA) -> NFA {
         .init(
-            startState: startState,
-            acceptanceStates: acceptanceStates,
-            isInverted: !isInverted,
-            activeEdges: activeEdges,
-            inactiveEdges: inactiveEdges
+            initialStates: nfa.initialStates,
+            activeAcceptance: nfa.inactiveAcceptance,
+            inactiveAcceptance: nfa.activeAcceptance,
+            activeEdges: nfa.activeEdges,
+            inactiveEdges: nfa.inactiveEdges
         )
     }
     
@@ -100,21 +121,19 @@ extension NFA {
 
 // MARK:-
 
-extension NFA.PredicatedStates {
-    
-    init() {
-        self.states = [:]
-    }
+extension NFA.SubsequentStates {
     
     func states(enabledFor symbol: Symbol) -> Set<NFA.State> {
-        Set(states.compactMap { stateAndPredicates in
+        Set(predicated.compactMap { stateAndPredicates in
             guard stateAndPredicates.value.first(where: { $0(symbol) }) != nil else { return nil }
             return stateAndPredicates.key
         })
     }
     
-    func merging(_ other: NFA.PredicatedStates) -> NFA.PredicatedStates {
-        NFA.PredicatedStates(states: states.merging(other.states, uniquingKeysWith: +))
+    func merging(_ other: NFA.SubsequentStates) -> NFA.SubsequentStates {
+        NFA.SubsequentStates(
+            predicated: predicated.merging(other.predicated, uniquingKeysWith: +)
+        )
     }
 }
 
@@ -128,5 +147,15 @@ extension NFA.State: Hashable {
     
     func hash(into hasher: inout Hasher) {
         ObjectIdentifier(self).hash(into: &hasher)
+    }
+}
+
+extension Set {
+    func includesAnyOf(_ other: Set) -> Bool {
+        !intersection(other).isEmpty
+    }
+    
+    func missesAnyOf(_ other: Set) -> Bool {
+        intersection(other).count < other.count
     }
 }
