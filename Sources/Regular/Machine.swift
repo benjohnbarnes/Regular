@@ -6,9 +6,7 @@
 struct NFA<Symbol> {
     let initialStates: Set<Node>
     let edges: Edges
-
-    let activeAcceptance: Set<Node>
-    let inactiveAcceptance: Set<Node>
+    let acceptance: Set<NodeState>
     
     typealias Edges = [Edge: [Predicate]]
     typealias Predicate = (Symbol) -> Bool
@@ -16,13 +14,11 @@ struct NFA<Symbol> {
     init(
         initialStates: Set<Node>,
         edges: Edges = [:],
-        activeAcceptance: Set<Node> = Set(),
-        inactiveAcceptance: Set<Node> = Set()
+        acceptance: Set<NodeState>
     ) {
         self.initialStates = initialStates
         self.edges = edges
-        self.activeAcceptance = activeAcceptance
-        self.inactiveAcceptance = inactiveAcceptance
+        self.acceptance = acceptance
     }
     
     func matches<S: Sequence>(_ symbols: S) -> Bool where S.Element == Symbol {
@@ -37,13 +33,13 @@ struct NFA<Symbol> {
     }
     
     func stateRepresentsAcceptance(_ activeStates: MachineState) -> Bool {
-        activeStates.includesAnyOf(activeAcceptance) || activeStates.missesAnyOf(inactiveAcceptance)
+        acceptance.first(where: { activeStates.contains($0.node) == $0.isActive }) != nil
     }
     
     private func possibleSubsequentStates(followingActiveStates activeStates: MachineState) -> (Symbol) -> Set<Node> {
         
         let enabledEdges = edges.compactMap { edge -> (Node, [Predicate])? in
-            guard activeStates.contains(edge.key.source) == edge.key.active else { return nil }
+            guard activeStates.contains(edge.key.source.node) == edge.key.source.isActive else { return nil }
             return (edge.key.target, edge.value)
         }
         
@@ -64,7 +60,7 @@ extension NFA {
         return NFA(
             initialStates: Set([initial]),
             edges: [Edge(from: initial, to: initial): [{ _ in true }]],
-            activeAcceptance: Set([initial])
+            acceptance: Set([.active(initial)])
         )
     }
     
@@ -79,7 +75,7 @@ extension NFA {
         return NFA(
             initialStates: Set([startState]),
             edges: [Edge(from: startState, to: acceptState): [predicate]],
-            activeAcceptance: Set([acceptState])
+            acceptance: Set([.active(acceptState)])
         )
     }
     
@@ -87,8 +83,7 @@ extension NFA {
         NFA(
             initialStates: l.initialStates.union(r.initialStates),
             edges: l.edges.merging(r.edges, uniquingKeysWith: +),
-            activeAcceptance: l.activeAcceptance.union(r.activeAcceptance),
-            inactiveAcceptance: l.inactiveAcceptance.union(r.inactiveAcceptance)
+            acceptance: l.acceptance.union(r.acceptance)
         )
     }
 
@@ -101,8 +96,7 @@ extension NFA {
         .init(
             initialStates: nfa.initialStates,
             edges: nfa.edges,
-            activeAcceptance: nfa.inactiveAcceptance,
-            inactiveAcceptance: nfa.activeAcceptance
+            acceptance: Set(nfa.acceptance.map { $0.invert })
         )
     }
     
@@ -139,14 +133,30 @@ class Node: Hashable {
     }
 }
 
+struct NodeState: Hashable {
+    let node: Node
+    let isActive: Bool
+    
+    static func active(_ node: Node) -> NodeState {
+        .init(node: node, isActive: true)
+    }
+    
+    var invert: NodeState {
+        .init(node: node, isActive: !isActive)
+    }
+}
+
 struct Edge: Hashable {
-    let active: Bool
-    let source: Node
+    let source: NodeState
     let target: Node
     
-    init(from source: Node, when active: Bool = true, to target: Node) {
+    init(from activeSource: Node, to target: Node) {
+        self.source = .active(activeSource)
+        self.target = target
+    }
+
+    init(from source: NodeState, to target: Node) {
         self.source = source
-        self.active = active
         self.target = target
     }
 }
