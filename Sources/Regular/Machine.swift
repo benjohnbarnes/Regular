@@ -4,34 +4,36 @@
 
 
 struct NFA<Symbol> {
-    let initialStates: Set<State>
-    let activeAcceptance: Set<State>
-    let inactiveAcceptance: Set<State>
+    let initialStates: Set<Node>
+    let activeAcceptance: Set<Node>
+    let inactiveAcceptance: Set<Node>
     
-    let activeEdges: [State: SubsequentStates]
-    let inactiveEdges: [State: SubsequentStates]
+    let activeEdges: [Node: SubsequentStates]
+    let inactiveEdges: [Node: SubsequentStates]
     
     struct SubsequentStates {
-        let predicated: [State: [(Symbol) -> Bool]]
-        let always: Set<State>
+        let predicated: [Node: [(Symbol) -> Bool]]
+        let always: Set<Node>
         
-        init(predicated: [State: [(Symbol) -> Bool]] = [:], always: Set<State> = Set()) {
+        init(predicated: [Node: [(Symbol) -> Bool]] = [:], always: Set<Node> = Set()) {
             self.predicated = predicated
             self.always = always
         }
     }
     
-    class State {}
+    enum Guard {
+        case active(Node)
+        case innactive(Node)
+    }
     
-    typealias PredicatedStates = [State: (Symbol) -> Bool]
-    typealias MachineState = Set<State>
+    typealias MachineState = Set<Node>
     
     init(
-        initialStates: Set<State>,
-        activeAcceptance: Set<State> = Set(),
-        inactiveAcceptance: Set<State> = Set(),
-        activeEdges: [State: SubsequentStates] = [:],
-        inactiveEdges: [State: SubsequentStates] = [:]
+        initialStates: Set<Node>,
+        activeAcceptance: Set<Node> = Set(),
+        inactiveAcceptance: Set<Node> = Set(),
+        activeEdges: [Node: SubsequentStates] = [:],
+        inactiveEdges: [Node: SubsequentStates] = [:]
     ) {
         self.initialStates = initialStates
         self.activeAcceptance = activeAcceptance
@@ -66,7 +68,7 @@ struct NFA<Symbol> {
 extension NFA {
     
     static var everything: NFA {
-        let initial = NFA.State()
+        let initial = Node()
         return NFA(
             initialStates: Set([initial]),
             activeAcceptance: Set([initial]),
@@ -79,8 +81,8 @@ extension NFA {
     }
     
     static func match(one predicate: @escaping (Symbol) -> Bool) -> NFA {
-        let startState = NFA.State()
-        let acceptState = NFA.State()
+        let startState = Node()
+        let acceptState = Node()
         
         return NFA(
             initialStates: Set([startState]),
@@ -123,7 +125,7 @@ extension NFA {
 
 extension NFA.SubsequentStates {
     
-    func states(enabledFor symbol: Symbol) -> Set<NFA.State> {
+    func states(enabledFor symbol: Symbol) -> Set<Node> {
         Set(predicated.compactMap { stateAndPredicates in
             guard stateAndPredicates.value.first(where: { $0(symbol) }) != nil else { return nil }
             return stateAndPredicates.key
@@ -139,9 +141,14 @@ extension NFA.SubsequentStates {
 
 // MARK:-
 
-extension NFA.State: Hashable {
+enum State: Equatable {
+    case active
+    case inactive
+}
+
+class Node: Hashable {
     
-    static func == (lhs: NFA<Symbol>.State, rhs: NFA<Symbol>.State) -> Bool {
+    static func == (lhs: Node, rhs: Node) -> Bool {
         lhs === rhs
     }
     
