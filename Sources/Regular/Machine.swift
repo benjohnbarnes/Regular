@@ -5,6 +5,7 @@
 
 struct NFA<Symbol> {
     let initialStates: Set<Node>
+
     let activeAcceptance: Set<Node>
     let inactiveAcceptance: Set<Node>
     
@@ -13,20 +14,11 @@ struct NFA<Symbol> {
     
     struct SubsequentStates {
         let predicated: [Node: [(Symbol) -> Bool]]
-        let always: Set<Node>
         
-        init(predicated: [Node: [(Symbol) -> Bool]] = [:], always: Set<Node> = Set()) {
+        init(predicated: [Node: [(Symbol) -> Bool]] = [:]) {
             self.predicated = predicated
-            self.always = always
         }
     }
-    
-    enum Guard {
-        case active(Node)
-        case innactive(Node)
-    }
-    
-    typealias MachineState = Set<Node>
     
     init(
         initialStates: Set<Node>,
@@ -156,6 +148,8 @@ class Node: Hashable {
         ObjectIdentifier(self).hash(into: &hasher)
     }
 }
+
+typealias MachineState = Set<Node>
 
 extension Set {
     func includesAnyOf(_ other: Set) -> Bool {
