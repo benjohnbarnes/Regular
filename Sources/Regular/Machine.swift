@@ -5,22 +5,12 @@
 
 struct NFA<Symbol> {
     let initialStates: Set<Node>
+    let acceptanceStates: Set<NodeState>
     let edges: Edges
-    let acceptance: Set<NodeState>
-    
+
     typealias Edges = [Edge: [Predicate]]
     typealias Predicate = (Symbol) -> Bool
 
-    init(
-        initialStates: Set<Node>,
-        edges: Edges = [:],
-        acceptance: Set<NodeState>
-    ) {
-        self.initialStates = initialStates
-        self.edges = edges
-        self.acceptance = acceptance
-    }
-    
     func matches<S: Sequence>(_ symbols: S) -> Bool where S.Element == Symbol {
         let initialState = initialStates
         let finalState = symbols.reduce(initialState, self.step(state:with:))
@@ -33,7 +23,7 @@ struct NFA<Symbol> {
     }
     
     func stateRepresentsAcceptance(_ activeStates: MachineState) -> Bool {
-        acceptance.first(where: { activeStates.contains($0.node) == $0.isActive }) != nil
+        acceptanceStates.first(where: { activeStates.contains($0.node) == $0.isActive }) != nil
     }
     
     private func possibleSubsequentStates(followingActiveStates activeStates: MachineState) -> (Symbol) -> Set<Node> {
@@ -59,8 +49,8 @@ extension NFA {
         let initial = Node()
         return NFA(
             initialStates: Set([initial]),
-            edges: [Edge(from: initial, to: initial): [{ _ in true }]],
-            acceptance: Set([.active(initial)])
+            acceptanceStates: Set([.active(initial)]),
+            edges: [Edge(from: initial, to: initial): [{ _ in true }]]
         )
     }
     
@@ -74,16 +64,16 @@ extension NFA {
         
         return NFA(
             initialStates: Set([startState]),
-            edges: [Edge(from: startState, to: acceptState): [predicate]],
-            acceptance: Set([.active(acceptState)])
+            acceptanceStates: Set([.active(acceptState)]),
+            edges: [Edge(from: startState, to: acceptState): [predicate]]
         )
     }
     
     static func |(_ l: NFA, _ r: NFA) -> NFA {
         NFA(
             initialStates: l.initialStates.union(r.initialStates),
-            edges: l.edges.merging(r.edges, uniquingKeysWith: +),
-            acceptance: l.acceptance.union(r.acceptance)
+            acceptanceStates: l.acceptanceStates.union(r.acceptanceStates),
+            edges: l.edges.merging(r.edges, uniquingKeysWith: +)
         )
     }
 
@@ -95,41 +85,44 @@ extension NFA {
     static prefix func !(_ nfa: NFA) -> NFA {
         .init(
             initialStates: nfa.initialStates,
-            edges: nfa.edges,
-            acceptance: Set(nfa.acceptance.map { $0.invert })
+            acceptanceStates: Set(nfa.acceptanceStates.map { $0.invert }),
+            edges: nfa.edges
         )
     }
     
     func then(_ next: NFA) -> NFA {
         
-        return self
-//        .init(
-//            initialStates: initialStates,
-//            activeAcceptance: next.activeAcceptance,
-//            inactiveAcceptance: next.inactiveAcceptance,
-//            activeEdges: <#T##[Node : SubsequentStates]#>,
-//            inactiveEdges: <#T##[Node : SubsequentStates]#>
-//        )
+        let nextInitialEdges = next.edges.filter { next.initialStates.contains($0.key.source.node) }
+        let joins = acceptanceStates.flatMap { acceptanceState in
+            nextInitialEdges.map { edge in (edge.key.changing(source: acceptanceState), edge.value) }
+        }
         
-        /*
-         Need to join the two NFA to build a new one.
-         
-         The resulting NFA has all nodes of each and all edges. In addition, all edges of the
-         `next` `initialStates` should be attached to (all) acceptance states of first.
-        */
+        return NFA(
+            initialStates: initialStates,
+            acceptanceStates: next.acceptanceStates,
+            edges: Dictionary(edges.map { $0 } + next.edges.map { $0 } + joins, uniquingKeysWith: +)
+        )
     }
 }
 
 // MARK:-
 
-class Node: Hashable {
+struct Edge: Hashable {
+    let source: NodeState
+    let target: Node
     
-    static func == (lhs: Node, rhs: Node) -> Bool {
-        lhs === rhs
+    init(from activeSource: Node, to target: Node) {
+        self.source = .active(activeSource)
+        self.target = target
+    }
+
+    init(from source: NodeState, to target: Node) {
+        self.source = source
+        self.target = target
     }
     
-    func hash(into hasher: inout Hasher) {
-        ObjectIdentifier(self).hash(into: &hasher)
+    func changing(source newSource: NodeState) -> Edge {
+        .init(from: NodeState(node: newSource.node, isActive: source.isActive == newSource.isActive ), to: target)
     }
 }
 
@@ -146,18 +139,14 @@ struct NodeState: Hashable {
     }
 }
 
-struct Edge: Hashable {
-    let source: NodeState
-    let target: Node
+class Node: Hashable {
     
-    init(from activeSource: Node, to target: Node) {
-        self.source = .active(activeSource)
-        self.target = target
+    static func == (lhs: Node, rhs: Node) -> Bool {
+        lhs === rhs
     }
-
-    init(from source: NodeState, to target: Node) {
-        self.source = source
-        self.target = target
+    
+    func hash(into hasher: inout Hasher) {
+        ObjectIdentifier(self).hash(into: &hasher)
     }
 }
 
