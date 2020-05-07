@@ -77,4 +77,26 @@ final class NFATests: XCTestCase {
         XCTAssertFalse(nfa.matches([1,2,2]))
         XCTAssertFalse(nfa.matches([1,1]))
     }
+    
+    func test_1optional() {
+        let nfa =  NFA<Int>.match(one: { $0 == 1 }).optional
+        
+        XCTAssertTrue(nfa.matches([]))
+        XCTAssertTrue(nfa.matches([1]))
+        
+        XCTAssertFalse(nfa.matches([2]))
+        XCTAssertFalse(nfa.matches([1,1]))
+    }
+    
+    func test_1plus() {
+        let nfa = NFA<Int>.match(one: { $0 == 1 }).plus
+        
+        XCTAssertTrue(nfa.matches([1]))
+        XCTAssertTrue(nfa.matches([1, 1]))
+        XCTAssertTrue(nfa.matches([1, 1, 1]))
+        XCTAssertTrue(nfa.matches([1, 1, 1, 1]))
+
+        XCTAssertFalse(nfa.matches([1, 2]))
+        XCTAssertFalse(nfa.matches([2, 1]))
+    }
 }

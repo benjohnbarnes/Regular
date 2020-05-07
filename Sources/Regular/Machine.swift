@@ -18,7 +18,7 @@ struct NFA<Symbol> {
     }
     
     func step(state activeStates: MachineState, with symbol: Symbol) -> MachineState {
-        let subsequentStates = possibleSubsequentStates(followingActiveStates: activeStates)
+        let subsequentStates = nextStateFunction(forActiveStates: activeStates)
         return subsequentStates(symbol)
     }
     
@@ -26,7 +26,7 @@ struct NFA<Symbol> {
         acceptanceStates.first(where: { activeStates.contains($0.node) == $0.isActive }) != nil
     }
     
-    private func possibleSubsequentStates(followingActiveStates activeStates: MachineState) -> (Symbol) -> Set<Node> {
+    private func nextStateFunction(forActiveStates activeStates: MachineState) -> (Symbol) -> Set<Node> {
         
         let enabledEdges = edges.compactMap { edge -> (Node, [Predicate])? in
             guard activeStates.contains(edge.key.source.node) == edge.key.source.isActive else { return nil }
@@ -83,15 +83,26 @@ extension NFA {
 
 
     static prefix func !(_ nfa: NFA) -> NFA {
-        .init(
+        NFA(
             initialStates: nfa.initialStates,
             acceptanceStates: Set(nfa.acceptanceStates.map { $0.invert }),
             edges: nfa.edges
         )
     }
+
+    var optional: NFA {
+        NFA(
+            initialStates: initialStates,
+            acceptanceStates: acceptanceStates.union(initialStates.map { .active($0) }),
+            edges: edges
+        )
+    }
+    
+    var plus: NFA {
+        self
+    }
     
     func then(_ next: NFA) -> NFA {
-        
         let nextInitialEdges = next.edges.filter { next.initialStates.contains($0.key.source.node) }
         let joins = acceptanceStates.flatMap { acceptanceState in
             nextInitialEdges.map { edge in (edge.key.changing(source: acceptanceState), edge.value) }
