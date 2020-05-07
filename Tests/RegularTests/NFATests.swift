@@ -53,6 +53,14 @@ final class NFATests: XCTestCase {
         XCTAssertFalse(nfa.matches([0]))
     }
     
+    func test_match1Or2_andNot1_matches2AndNot1() {
+        let nfa = !NFA<Int>.match(one: { 1...2 ~= $0 }) & !.match(one: { $0 == 1 })
+        
+        XCTAssertTrue(nfa.matches([2]))
+
+        XCTAssertFalse(nfa.matches([1]))
+    }
+    
     func test_1or2_matches1Or2() {
         let nfa: NFA<Int> = .match(one: { $0 == 1 }) | .match(one: { $0 == 2 })
 
