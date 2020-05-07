@@ -76,14 +76,25 @@ extension NFA {
         !nothing
     }
     
+    static var empty: NFA {
+        let node = Node()
+        
+        return NFA(
+            initialStates: Set([node]),
+            acceptanceStates: Set([.active(node)]),
+            predicatedEdges: .init(),
+            epsilonEdges: .init()
+        )
+    }
+    
     static func just(_ predicate: @escaping (Symbol) -> Bool) -> NFA {
-        let startState = Node()
+        let initialState = Node()
         let acceptState = Node()
         
         return NFA(
-            initialStates: Set([startState]),
+            initialStates: Set([initialState]),
             acceptanceStates: Set([.active(acceptState)]),
-            predicatedEdges: [Edge(from: startState, to: acceptState): [predicate]],
+            predicatedEdges: [Edge(from: initialState, to: acceptState): [predicate]],
             epsilonEdges: .init()
         )
     }
@@ -116,22 +127,11 @@ extension NFA {
     }
 
     var optional: NFA {
-        let extraAcceptance = Node()
-
-        let extraEpsilon = initialStates.map { initalState in
-            Edge(from: initalState, to: extraAcceptance)
-        }
-
-        return NFA(
-            initialStates: initialStates,
-            acceptanceStates: acceptanceStates.union([.active(extraAcceptance)]),
-            predicatedEdges: predicatedEdges,
-            epsilonEdges: epsilonEdges.union(extraEpsilon)
-        )
+        self | .empty
     }
     
     var star: NFA {
-        plus.optional
+        plus | .empty
     }
     
     var plus: NFA {

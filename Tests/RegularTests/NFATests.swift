@@ -23,10 +23,28 @@ final class NFATests: XCTestCase {
     }
     
     func test_nothing_doesNotMatchNonEmptySequence() {
-        let nfa = NFA<Int>.nothing
+        let nfa: NFA<Int> = .nothing
         
         XCTAssertFalse(nfa.matches([1]))
         XCTAssertFalse(nfa.matches([1, 2]))
+    }
+    
+    func test_empty() {
+        let empty: NFA<Int> = .empty
+        
+        XCTAssertTrue(empty.matches([]))
+
+        XCTAssertFalse(empty.matches([1]))
+        XCTAssertFalse(empty.matches([1, 2]))
+    }
+    
+    func test_notEmpty() {
+        let empty: NFA<Int> = !.empty
+        
+        XCTAssertFalse(empty.matches([]))
+
+        XCTAssertTrue(empty.matches([1]))
+        XCTAssertTrue(empty.matches([1, 2]))
     }
     
     func test_matchOne_matchesOne() {
@@ -98,6 +116,36 @@ final class NFATests: XCTestCase {
         XCTAssertFalse(nfa.matches([1,1]))
     }
     
+    func test_1then2then3() {
+        let nfa: NFA<Int> = NFA<Int>.just({ $0 == 1 }).then(.just({ $0 == 2 })).then(.just({ $0 == 3}))
+
+        XCTAssertTrue(nfa.matches([1,2,3]))
+
+        XCTAssertFalse(nfa.matches([]))
+        XCTAssertFalse(nfa.matches([1]))
+        XCTAssertFalse(nfa.matches([2]))
+        XCTAssertFalse(nfa.matches([2,1]))
+        XCTAssertFalse(nfa.matches([1,2]))
+        XCTAssertFalse(nfa.matches([1,2,3,3]))
+        XCTAssertFalse(nfa.matches([1,2,2]))
+        XCTAssertFalse(nfa.matches([1,1]))
+    }
+    
+    func test_not1then2then3() {
+        let nfa: NFA<Int> = !(NFA<Int>.just({ $0 == 1 }).then(.just({ $0 == 2 })).then(.just({ $0 == 3})))
+
+        XCTAssertFalse(nfa.matches([1,2,3]))
+
+        XCTAssertTrue(nfa.matches([]))
+        XCTAssertTrue(nfa.matches([1]))
+        XCTAssertTrue(nfa.matches([2]))
+        XCTAssertTrue(nfa.matches([2,1]))
+        XCTAssertTrue(nfa.matches([1,2]))
+        XCTAssertTrue(nfa.matches([1,2,3,3]))
+        XCTAssertTrue(nfa.matches([1,2,2]))
+        XCTAssertTrue(nfa.matches([1,1]))
+    }
+    
     func test_1optional() {
         let nfa =  NFA<Int>.just({ $0 == 1 }).optional
         
@@ -106,6 +154,16 @@ final class NFATests: XCTestCase {
         
         XCTAssertFalse(nfa.matches([2]))
         XCTAssertFalse(nfa.matches([1,1]))
+    }
+    
+    func test_not1optional() {
+        let nfa: NFA<Int> =  !(NFA.just({ $0 == 1 }).optional)
+        
+        XCTAssertFalse(nfa.matches([]))
+        XCTAssertFalse(nfa.matches([1]))
+        
+        XCTAssertTrue(nfa.matches([2]))
+        XCTAssertTrue(nfa.matches([1,1]))
     }
     
     func test_1plus() {
