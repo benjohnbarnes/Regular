@@ -217,4 +217,27 @@ final class NFATests: XCTestCase {
         XCTAssertTrue(nfa.matches([1, 2]))
         XCTAssertTrue(nfa.matches([2, 1]))
     }
+    
+    func test_dot() {
+        let nfa: NFA<Int> = .dot
+
+        XCTAssertTrue(nfa.matches([0]))
+        XCTAssertTrue(nfa.matches([1]))
+        XCTAssertTrue(nfa.matches([2]))
+        
+        XCTAssertFalse(nfa.matches([]))
+        XCTAssertFalse(nfa.matches([1, 1]))
+    }
+
+    func test_notDot() {
+        let nfa: NFA<Int> = !.dot
+
+        XCTAssertFalse(nfa.matches([0]))
+        XCTAssertFalse(nfa.matches([1]))
+        XCTAssertFalse(nfa.matches([2]))
+        
+        XCTAssertTrue(nfa.matches([]))
+        XCTAssertTrue(nfa.matches([1, 1]))
+    }
+
 }

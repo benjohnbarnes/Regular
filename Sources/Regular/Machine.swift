@@ -87,6 +87,10 @@ extension NFA {
         )
     }
     
+    static var dot: NFA {
+        just { _ in true }
+    }
+    
     static func just(_ predicate: @escaping (Symbol) -> Bool) -> NFA {
         let initialState = Node()
         let acceptState = Node()
