@@ -12,7 +12,7 @@ struct NFA<Symbol> {
     typealias Predicate = (Symbol) -> Bool
 
     func matches<S: Sequence>(_ symbols: S) -> Bool where S.Element == Symbol {
-        let initialState = initialStates
+        let initialState = propagateEpsilonEdges(fromActiveStates: initialStates)
         let finalState = symbols.reduce(initialState, self.step(state:with:))
         return stateRepresentsAcceptance(finalState)
     }
@@ -23,27 +23,31 @@ struct NFA<Symbol> {
     }
     
     func stateRepresentsAcceptance(_ activeStates: MachineState) -> Bool {
-        acceptanceStates.first(where: { activeStates.contains($0.node) == $0.isActive }) != nil
+        acceptanceStates.first(where: { acceptanceState in
+            activeStates.contains(acceptanceState.node) == acceptanceState.isActive
+        }) != nil
     }
     
     private func nextStateFunction(forActiveStates activeStates: MachineState) -> (Symbol) -> Set<Node> {
-        
-        let enabledEdges = predicatedEdges.compactMap { edge -> (Node, [Predicate])? in
+        let enabledEdges = predicatedEdges.compactMap { edge -> (target: Node, predicates: [Predicate])? in
             guard activeStates.contains(edge.key.source.node) == edge.key.source.isActive else { return nil }
-            return (edge.key.target, edge.value)
+            return (target: edge.key.target, predicates: edge.value)
         }
         
         return { symbol in
-            let beforeEpsilon = Set(enabledEdges.compactMap { edge in
-                edge.1.first(where: { $0(symbol) }) == nil ? nil : edge.0
-            })
-            
-            return self.propagateEpsilonEdges(toActiveStates: beforeEpsilon)
+            self.propagateEpsilonEdges(fromActiveStates: Set(enabledEdges.compactMap { edge in
+                edge.predicates.first(where: { $0(symbol) }) == nil ? nil : edge.target
+            }))
         }
     }
     
-    private func propagateEpsilonEdges(toActiveStates activeStates: MachineState) -> MachineState {
-        let expandedActiveStates = sequence(first: activeStates) { activeStates -> Set<Node>? in
+    private func propagateEpsilonEdges(fromActiveStates activeStates: MachineState) -> MachineState {
+        let expandedActiveStates = activeStates.union(epsilonEdges.compactMap { edge -> Node? in
+            guard !edge.source.isActive, !activeStates.contains(edge.source.node) else { return nil }
+            return edge.target
+        })
+        
+        return sequence(first: expandedActiveStates) { activeStates -> Set<Node>? in
             let nextStates = Set(self.epsilonEdges.compactMap { edge -> Node? in
                 guard edge.source.isActive, activeStates.contains(edge.source.node) else { return nil }
                 return edge.target
@@ -51,12 +55,7 @@ struct NFA<Symbol> {
             
             guard !nextStates.isEmpty else { return nil }
             return nextStates
-        }.reduce(activeStates) { $0.union($1) }
-
-        return expandedActiveStates.union(epsilonEdges.compactMap { edge -> Node? in
-            guard !edge.source.isActive, !expandedActiveStates.contains(edge.source.node) else { return nil }
-            return edge.target
-        })
+        }.reduce(expandedActiveStates) { $0.union($1) }
     }
 }
 
