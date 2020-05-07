@@ -7,6 +7,7 @@ struct NFA<Symbol> {
     let initialStates: Set<Node>
     let acceptanceStates: Set<NodeState>
     let predicatedEdges: [Edge: [Predicate]]
+    let epsilonEdges: Set<Edge>
 
     typealias Predicate = (Symbol) -> Bool
 
@@ -33,10 +34,29 @@ struct NFA<Symbol> {
         }
         
         return { symbol in
-            Set(enabledEdges.compactMap { edge in
+            let beforeEpsilon = Set(enabledEdges.compactMap { edge in
                 edge.1.first(where: { $0(symbol) }) == nil ? nil : edge.0
             })
+            
+            return self.propagateEpsilonEdges(toActiveStates: beforeEpsilon)
         }
+    }
+    
+    private func propagateEpsilonEdges(toActiveStates activeStates: MachineState) -> MachineState {
+        let expandedActiveStates = sequence(first: activeStates) { activeStates -> Set<Node>? in
+            let nextStates = Set(self.epsilonEdges.compactMap { edge -> Node? in
+                guard edge.source.isActive, activeStates.contains(edge.source.node) else { return nil }
+                return edge.target
+            })
+            
+            guard !nextStates.isEmpty else { return nil }
+            return nextStates
+        }.reduce(activeStates) { $0.union($1) }
+
+        return expandedActiveStates.union(epsilonEdges.compactMap { edge -> Node? in
+            guard !edge.source.isActive, !expandedActiveStates.contains(edge.source.node) else { return nil }
+            return edge.target
+        })
     }
 }
 
@@ -49,7 +69,8 @@ extension NFA {
         return NFA(
             initialStates: Set([initial]),
             acceptanceStates: Set([.active(initial)]),
-            predicatedEdges: [Edge(from: initial, to: initial): [{ _ in true }]]
+            predicatedEdges: [Edge(from: initial, to: initial): [{ _ in true }]],
+            epsilonEdges: .init()
         )
     }
     
@@ -64,7 +85,8 @@ extension NFA {
         return NFA(
             initialStates: Set([startState]),
             acceptanceStates: Set([.active(acceptState)]),
-            predicatedEdges: [Edge(from: startState, to: acceptState): [predicate]]
+            predicatedEdges: [Edge(from: startState, to: acceptState): [predicate]],
+            epsilonEdges: .init()
         )
     }
     
@@ -72,7 +94,8 @@ extension NFA {
         NFA(
             initialStates: l.initialStates.union(r.initialStates),
             acceptanceStates: l.acceptanceStates.union(r.acceptanceStates),
-            predicatedEdges: l.predicatedEdges.merging(r.predicatedEdges, uniquingKeysWith: +)
+            predicatedEdges: l.predicatedEdges.merging(r.predicatedEdges, uniquingKeysWith: +),
+            epsilonEdges: .init()
         )
     }
 
@@ -85,7 +108,8 @@ extension NFA {
         NFA(
             initialStates: nfa.initialStates,
             acceptanceStates: Set(nfa.acceptanceStates.map { $0.invert }),
-            predicatedEdges: nfa.predicatedEdges
+            predicatedEdges: nfa.predicatedEdges,
+            epsilonEdges: .init()
         )
     }
 
@@ -93,24 +117,38 @@ extension NFA {
         NFA(
             initialStates: initialStates,
             acceptanceStates: acceptanceStates.union(initialStates.map { .active($0) }),
-            predicatedEdges: predicatedEdges
+            predicatedEdges: predicatedEdges,
+            epsilonEdges: .init()
         )
     }
     
     var plus: NFA {
-        self
+        let epsilonEdges = Set(acceptanceStates.flatMap { acceptanceState in
+            self.initialStates.map { initialState in
+                return Edge(from: acceptanceState, to: initialState)
+            }
+        })
+
+        return NFA(
+            initialStates: initialStates,
+            acceptanceStates: acceptanceStates,
+            predicatedEdges: predicatedEdges,
+            epsilonEdges: epsilonEdges
+        )
     }
     
     func then(_ next: NFA) -> NFA {
-        let nextInitialEdges = next.predicatedEdges.filter { next.initialStates.contains($0.key.source.node) }
-        let joins = acceptanceStates.flatMap { acceptanceState in
-            nextInitialEdges.map { edge in (edge.key.changing(source: acceptanceState), edge.value) }
-        }
+        let epsilonEdges = Set(acceptanceStates.flatMap { acceptanceState in
+            next.initialStates.map { initialState in
+                return Edge(from: acceptanceState, to: initialState)
+            }
+        })
         
         return NFA(
             initialStates: initialStates,
             acceptanceStates: next.acceptanceStates,
-            predicatedEdges: Dictionary(predicatedEdges.map { $0 } + next.predicatedEdges.map { $0 } + joins, uniquingKeysWith: +)
+            predicatedEdges: predicatedEdges.merging(next.predicatedEdges, uniquingKeysWith: +),
+            epsilonEdges: epsilonEdges
         )
     }
 }
