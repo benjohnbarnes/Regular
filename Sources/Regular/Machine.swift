@@ -63,21 +63,20 @@ struct NFA<Symbol> {
 
 extension NFA {
     
-    static var everything: NFA {
-        let initial = Node()
-        return NFA(
-            initialStates: Set([initial]),
-            acceptanceStates: Set([.active(initial)]),
-            predicatedEdges: [Edge(from: initial, to: initial): [{ _ in true }]],
+    static var nothing: NFA {
+        .init(
+            initialStates: .init(),
+            acceptanceStates: .init([.active(.init())]),
+            predicatedEdges: .init(),
             epsilonEdges: .init()
         )
     }
     
-    static var nothing: NFA {
-        !everything
+    static var everything: NFA {
+        !nothing
     }
     
-    static func match(one predicate: @escaping (Symbol) -> Bool) -> NFA {
+    static func just(_ predicate: @escaping (Symbol) -> Bool) -> NFA {
         let startState = Node()
         let acceptState = Node()
         
@@ -90,16 +89,20 @@ extension NFA {
     }
     
     static func |(_ l: NFA, _ r: NFA) -> NFA {
-        NFA(
+        let acceptance = Node()
+        let extraEpsilon = l.acceptanceStates.union(r.acceptanceStates).map { Edge(from: $0, to: acceptance) }
+        
+        return NFA(
             initialStates: l.initialStates.union(r.initialStates),
-            acceptanceStates: l.acceptanceStates.union(r.acceptanceStates),
-            predicatedEdges: l.predicatedEdges.merging(r.predicatedEdges, uniquingKeysWith: +),
-            epsilonEdges: l.epsilonEdges.union(r.epsilonEdges)
+            acceptanceStates: Set([.active(acceptance)]),
+            // Using fatal error here as these seems like it would be a logic error?
+            predicatedEdges: l.predicatedEdges.merging(r.predicatedEdges, uniquingKeysWith: { _, _ in fatalError() }),
+            epsilonEdges: l.epsilonEdges.union(r.epsilonEdges + extraEpsilon)
         )
     }
 
     static func &(_ l: NFA, _ r: NFA) -> NFA {
-        !(!l | !r)
+        !((!l) | (!r))
     }
 
 
@@ -113,11 +116,17 @@ extension NFA {
     }
 
     var optional: NFA {
-        NFA(
+        let extraAcceptance = Node()
+
+        let extraEpsilon = initialStates.map { initalState in
+            Edge(from: initalState, to: extraAcceptance)
+        }
+
+        return NFA(
             initialStates: initialStates,
-            acceptanceStates: acceptanceStates.union(initialStates.map { .active($0) }),
+            acceptanceStates: acceptanceStates.union([.active(extraAcceptance)]),
             predicatedEdges: predicatedEdges,
-            epsilonEdges: epsilonEdges
+            epsilonEdges: epsilonEdges.union(extraEpsilon)
         )
     }
     
@@ -126,32 +135,32 @@ extension NFA {
     }
     
     var plus: NFA {
-        let epsilonEdges = self.epsilonEdges.union(acceptanceStates.flatMap { acceptanceState in
+        let loopEpsilonEdges = acceptanceStates.flatMap { acceptanceState in
             self.initialStates.map { initialState in
                 return Edge(from: acceptanceState, to: initialState)
             }
-        })
+        }
 
         return NFA(
             initialStates: initialStates,
             acceptanceStates: acceptanceStates,
             predicatedEdges: predicatedEdges,
-            epsilonEdges: epsilonEdges
+            epsilonEdges: epsilonEdges.union(loopEpsilonEdges)
         )
     }
     
     func then(_ next: NFA) -> NFA {
-        let epsilonEdges = self.epsilonEdges.union(acceptanceStates.flatMap { acceptanceState in
+        let joinEpsilonEdges = acceptanceStates.flatMap { acceptanceState in
             next.initialStates.map { initialState in
                 return Edge(from: acceptanceState, to: initialState)
             }
-        })
+        }
         
         return NFA(
             initialStates: initialStates,
             acceptanceStates: next.acceptanceStates,
             predicatedEdges: predicatedEdges.merging(next.predicatedEdges, uniquingKeysWith: +),
-            epsilonEdges: epsilonEdges
+            epsilonEdges: epsilonEdges.union(next.epsilonEdges + joinEpsilonEdges)
         )
     }
 }
