@@ -61,7 +61,7 @@ final class NFATests: XCTestCase {
         XCTAssertFalse(nfa.matches([1]))
     }
     
-    func test_1or2_matches1Or2() {
+    func test_1Or2_matches1Or2() {
         let nfa: NFA<Int> = .match(one: { $0 == 1 }) | .match(one: { $0 == 2 })
 
         XCTAssertTrue(nfa.matches([1]))
@@ -71,6 +71,17 @@ final class NFATests: XCTestCase {
         XCTAssertFalse(nfa.matches([1,2]))
         XCTAssertFalse(nfa.matches([2,1]))
         XCTAssertFalse(nfa.matches([3]))
+    }
+
+    func test_1Or2And2Or3_matchesOnly2() {
+        let nfa: NFA<Int> = .match(one: { 1...2 ~= $0 }) & .match(one: { 2...3 ~= $0 })
+
+        XCTAssertTrue(nfa.matches([2]))
+
+        XCTAssertFalse(nfa.matches([1]))
+        XCTAssertFalse(nfa.matches([3]))
+        XCTAssertFalse(nfa.matches([]))
+        XCTAssertFalse(nfa.matches([2,2]))
     }
 
     func test_1then2_matches1Then2() {
@@ -104,7 +115,47 @@ final class NFATests: XCTestCase {
         XCTAssertTrue(nfa.matches([1, 1, 1]))
         XCTAssertTrue(nfa.matches([1, 1, 1, 1]))
 
+        XCTAssertFalse(nfa.matches([]))
         XCTAssertFalse(nfa.matches([1, 2]))
         XCTAssertFalse(nfa.matches([2, 1]))
+    }
+    
+    func test_not1Plus() {
+        let nfa = !(NFA<Int>.match(one: { $0 == 1 }).plus)
+        
+        XCTAssertFalse(nfa.matches([1]))
+        XCTAssertFalse(nfa.matches([1, 1]))
+        XCTAssertFalse(nfa.matches([1, 1, 1]))
+        XCTAssertFalse(nfa.matches([1, 1, 1, 1]))
+
+        XCTAssertTrue(nfa.matches([]))
+        XCTAssertTrue(nfa.matches([1, 2]))
+        XCTAssertTrue(nfa.matches([2, 1]))
+    }
+
+    func test_1star() {
+        let nfa = NFA<Int>.match(one: { $0 == 1 }).star
+        
+        XCTAssertTrue(nfa.matches([]))
+        XCTAssertTrue(nfa.matches([1]))
+        XCTAssertTrue(nfa.matches([1, 1]))
+        XCTAssertTrue(nfa.matches([1, 1, 1]))
+        XCTAssertTrue(nfa.matches([1, 1, 1, 1]))
+
+        XCTAssertFalse(nfa.matches([1, 2]))
+        XCTAssertFalse(nfa.matches([2, 1]))
+    }
+    
+    func test_not1star() {
+        let nfa = !(NFA<Int>.match(one: { $0 == 1 }).star)
+        
+        XCTAssertFalse(nfa.matches([]))
+        XCTAssertFalse(nfa.matches([1]))
+        XCTAssertFalse(nfa.matches([1, 1]))
+        XCTAssertFalse(nfa.matches([1, 1, 1]))
+        XCTAssertFalse(nfa.matches([1, 1, 1, 1]))
+
+        XCTAssertTrue(nfa.matches([1, 2]))
+        XCTAssertTrue(nfa.matches([2, 1]))
     }
 }

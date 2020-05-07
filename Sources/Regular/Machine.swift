@@ -95,7 +95,7 @@ extension NFA {
             initialStates: l.initialStates.union(r.initialStates),
             acceptanceStates: l.acceptanceStates.union(r.acceptanceStates),
             predicatedEdges: l.predicatedEdges.merging(r.predicatedEdges, uniquingKeysWith: +),
-            epsilonEdges: .init()
+            epsilonEdges: l.epsilonEdges.union(r.epsilonEdges)
         )
     }
 
@@ -109,7 +109,7 @@ extension NFA {
             initialStates: nfa.initialStates,
             acceptanceStates: Set(nfa.acceptanceStates.map { $0.invert }),
             predicatedEdges: nfa.predicatedEdges,
-            epsilonEdges: .init()
+            epsilonEdges: nfa.epsilonEdges
         )
     }
 
@@ -118,12 +118,16 @@ extension NFA {
             initialStates: initialStates,
             acceptanceStates: acceptanceStates.union(initialStates.map { .active($0) }),
             predicatedEdges: predicatedEdges,
-            epsilonEdges: .init()
+            epsilonEdges: epsilonEdges
         )
     }
     
+    var star: NFA {
+        plus.optional
+    }
+    
     var plus: NFA {
-        let epsilonEdges = Set(acceptanceStates.flatMap { acceptanceState in
+        let epsilonEdges = self.epsilonEdges.union(acceptanceStates.flatMap { acceptanceState in
             self.initialStates.map { initialState in
                 return Edge(from: acceptanceState, to: initialState)
             }
@@ -138,7 +142,7 @@ extension NFA {
     }
     
     func then(_ next: NFA) -> NFA {
-        let epsilonEdges = Set(acceptanceStates.flatMap { acceptanceState in
+        let epsilonEdges = self.epsilonEdges.union(acceptanceStates.flatMap { acceptanceState in
             next.initialStates.map { initialState in
                 return Edge(from: acceptanceState, to: initialState)
             }
