@@ -30,7 +30,7 @@ struct NFA<Symbol> {
     
     private func nextStateFunction(forActiveStates activeStates: MachineState) -> (Symbol) -> Set<Node> {
         let enabledEdges = predicatedEdges.compactMap { edge -> (target: Node, predicates: [Predicate])? in
-            guard activeStates.contains(edge.key.source.node) == edge.key.source.isActive else { return nil }
+            guard activeStates.contains(edge.key.source.node), edge.key.source.isActive else { return nil }
             return (target: edge.key.target, predicates: edge.value)
         }
         
@@ -87,11 +87,11 @@ extension NFA {
         )
     }
     
-    static var dot: NFA {
-        just { _ in true }
+    static var any: NFA {
+        only { _ in true }
     }
     
-    static func just(_ predicate: @escaping (Symbol) -> Bool) -> NFA {
+    static func only(_ predicate: @escaping (Symbol) -> Bool) -> NFA {
         let initialState = Node()
         let acceptState = Node()
         
