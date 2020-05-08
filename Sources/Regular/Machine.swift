@@ -88,10 +88,10 @@ extension NFA {
     }
     
     static var any: NFA {
-        only { _ in true }
+        one { _ in true }
     }
     
-    static func only(_ predicate: @escaping (Symbol) -> Bool) -> NFA {
+    static func one(_ predicate: @escaping (Symbol) -> Bool) -> NFA {
         let initialState = Node()
         let acceptState = Node()
         
