@@ -24,7 +24,7 @@ public extension NFA {
 
 public extension NFA {
     
-    static var nothing: NFA {
+    static var none: NFA {
         .init(
             initialStates: .init(),
             acceptanceState: .init(),
@@ -33,8 +33,8 @@ public extension NFA {
         )
     }
     
-    static var everything: NFA {
-        !nothing
+    static var all: NFA {
+        !none
     }
     
     static var empty: NFA {
@@ -48,11 +48,11 @@ public extension NFA {
         )
     }
     
-    static var any: NFA {
-        one { _ in true }
+    static var symbol: NFA {
+        symbol { _ in true }
     }
     
-    static func one(_ predicate: @escaping (Symbol) -> Bool) -> NFA {
+    static func symbol(_ predicate: @escaping (Symbol) -> Bool) -> NFA {
         let initialState = Node()
         let acceptState = Node()
         
@@ -124,6 +124,10 @@ public extension NFA {
             predicateEdges: predicateEdges.merging(next.predicateEdges, uniquingKeysWith: { _, _ in fatalError("Logic error") }),
             epsilonEdges: epsilonEdges + next.epsilonEdges + joinEpsilonEdges
         )
+    }
+    
+    static func sequence(_ s: [NFA]) -> NFA {
+        s.reduce(.empty) { $0.then($1) }
     }
 }
 
