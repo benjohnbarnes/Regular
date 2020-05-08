@@ -230,4 +230,20 @@ final class NFATests: XCTestCase {
         XCTAssertTrue(nfa.matches([1, 1]))
     }
 
+    func test_1AtFourFromEnd() {
+        let nfa: NFA<Int> = NFA.any.star.then(.one({ $0 == 1})).then(.any).then(.any).then(.any)
+        
+        XCTAssertTrue(nfa.matches([1, 0, 0, 0]))
+        XCTAssertTrue(nfa.matches([1, 1, 0, 0]))
+        XCTAssertTrue(nfa.matches([1, 0, 1, 1]))
+        XCTAssertTrue(nfa.matches([1, 1, 0, 1, 1]))
+        XCTAssertTrue(nfa.matches([0, 1, 0, 1, 1]))
+        XCTAssertTrue(nfa.matches([0, 0, 1, 0, 1, 1]))
+        XCTAssertTrue(nfa.matches([1, 0, 1, 0, 1, 1]))
+
+        XCTAssertFalse(nfa.matches([]))
+        XCTAssertFalse(nfa.matches([1]))
+        XCTAssertFalse(nfa.matches([1, 1]))
+        XCTAssertFalse(nfa.matches([1, 1, 1]))
+    }
 }
