@@ -3,28 +3,18 @@ import XCTest
 
 final class NFATests: XCTestCase {
     
-    func test_everything_matchesEmptySequence() {
+    func test_everything() {
         let nfa = NFA<Int>.everything
 
         XCTAssertTrue(nfa.matches([]))
-    }
-
-    func test_everything_matchesNonEmptySequence() {
-        let nfa = NFA<Int>.everything
-
         XCTAssertTrue(nfa.matches([1]))
         XCTAssertTrue(nfa.matches([1, 2]))
     }
 
-    func test_nothing_doesNotMatchEmptySequence() {
+    func test_nothing() {
         let nfa = NFA<Int>.nothing
 
         XCTAssertFalse(nfa.matches([]))
-    }
-    
-    func test_nothing_doesNotMatchNonEmptySequence() {
-        let nfa: NFA<Int> = .nothing
-        
         XCTAssertFalse(nfa.matches([1]))
         XCTAssertFalse(nfa.matches([1, 2]))
     }
