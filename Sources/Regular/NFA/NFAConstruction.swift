@@ -4,17 +4,20 @@
 
 extension NFA {
     
-    static var none: NFA {
-        .init(
-            initialStates: .init(),
-            acceptanceState: .init(),
-            predicateEdges: .init(),
-            epsilonEdges: .init()
+    static var all: NFA {
+        let initial = Node()
+        let accept = Node()
+
+        return .init(
+            initialStates: .init([initial]),
+            acceptanceState: accept,
+            predicateEdges: [accept: [accept: [{ _ in true }]]],
+            epsilonEdges: [EpsilonEdge(source: initial, target: accept, isActive: true)]
         )
     }
     
-    static var all: NFA {
-        !none
+    static var none: NFA {
+        !all
     }
     
     static var empty: NFA {
@@ -103,7 +106,7 @@ extension NFA {
             initialStates: l.initialStates,
             acceptanceState: r.acceptanceState,
             predicateEdges: l.predicateEdges.merging(r.predicateEdges, uniquingKeysWith: { _, _ in fatalError("Logic error") }),
-            epsilonEdges: l.epsilonEdges + r.epsilonEdges + joinEpsilonEdges
+            epsilonEdges: l.epsilonEdges + joinEpsilonEdges + r.epsilonEdges
         )
     }
 }
