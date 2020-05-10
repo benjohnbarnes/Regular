@@ -17,6 +17,7 @@ public indirect enum Expression<Symbol> {
     
     case or(Expression, Expression)
     case and(Expression, Expression)
+    case xor(Expression, Expression)
     case then(Expression, Expression)
 
     public typealias Predicate = (Symbol) -> Bool
@@ -32,6 +33,10 @@ extension Expression {
     
     static func &(_ a: Expression, _ b: Expression) -> Expression {
         .and(a, b)
+    }
+    
+    static func ^(_ a: Expression, _ b: Expression) -> Expression {
+        .xor(a, b)
     }
     
     static func +(_ a: Expression, _ b: Expression) -> Expression {
