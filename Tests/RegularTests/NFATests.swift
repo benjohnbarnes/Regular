@@ -1,18 +1,22 @@
-import XCTest
+//
+//  Created by Benjohn on 10/05/2020.
+//
+
 @testable import Regular
+import XCTest
 
 final class NFATests: XCTestCase {
     
-    func test_everything() {
-        let nfa = NFA<Int>.everything
+    func test_all() {
+        let nfa = NFA<Int>.all
 
         XCTAssertTrue(nfa.matches([]))
         XCTAssertTrue(nfa.matches([1]))
         XCTAssertTrue(nfa.matches([1, 2]))
     }
 
-    func test_nothing() {
-        let nfa = NFA<Int>.nothing
+    func test_none() {
+        let nfa = NFA<Int>.none
 
         XCTAssertFalse(nfa.matches([]))
         XCTAssertFalse(nfa.matches([1]))
@@ -28,8 +32,8 @@ final class NFATests: XCTestCase {
         XCTAssertFalse(empty.matches([1, 2]))
     }
     
-    func test_notEmpty() {
-        let empty: NFA<Int> = !.empty
+    func test_some() {
+        let empty: NFA<Int> = .some
         
         XCTAssertFalse(empty.matches([]))
 
@@ -82,19 +86,6 @@ final class NFATests: XCTestCase {
         XCTAssertFalse(nfa.matches([4]))
     }
 
-//    func test_1Or2XOR2Or3_matches1And3ButNot2() {
-//        let nfa: NFA<Int> = .symbol({ 1...2 ~= $0 }) ^ .symbol({ 2...3 ~= $0 })
-//
-//        XCTAssertTrue(nfa.matches([1]))
-//        XCTAssertTrue(nfa.matches([3]))
-//
-//        XCTAssertFalse(nfa.matches([]))
-//        XCTAssertFalse(nfa.matches([2]))
-//        XCTAssertFalse(nfa.matches([1,2]))
-//        XCTAssertFalse(nfa.matches([2,1]))
-//        XCTAssertFalse(nfa.matches([4]))
-//    }
-    
     func test_1Or2And2Or3_matchesOnly2() {
         let nfa: NFA<Int> = .symbol({ 1...2 ~= $0 }) & .symbol({ 2...3 ~= $0 })
 
@@ -132,6 +123,19 @@ final class NFATests: XCTestCase {
         XCTAssertFalse(nfa.matches([1,2,3,3]))
         XCTAssertFalse(nfa.matches([1,2,2]))
         XCTAssertFalse(nfa.matches([1,1]))
+    }
+    
+    func test_1ThenAnythingThen1() {
+        let nfa: NFA<Int> = NFA<Int>.symbol({ $0 == 1 }) + NFA<Int>.all + NFA<Int>.symbol({ $0 == 1 })
+
+        XCTAssertTrue(nfa.matches([1,1]))
+        XCTAssertTrue(nfa.matches([1, 2, 1]))
+        XCTAssertTrue(nfa.matches([1, 2, 3, 4, 3, 2, 1]))
+
+        XCTAssertFalse(nfa.matches([]))
+        XCTAssertFalse(nfa.matches([1]))
+        XCTAssertFalse(nfa.matches([1, 2]))
+        XCTAssertFalse(nfa.matches([2, 1]))
     }
     
     func test_not1then2then3() {
@@ -244,7 +248,7 @@ final class NFATests: XCTestCase {
     }
 
     func test_1AtFourFromEnd() {
-        let nfa: NFA<Int> = NFA.everything + .symbol { $0 == 1 } + .any + .any + .any
+        let nfa: NFA<Int> = NFA.all + .symbol { $0 == 1 } + .any + .any + .any
         
         XCTAssertTrue(nfa.matches([1, 0, 0, 0]))
         XCTAssertTrue(nfa.matches([1, 1, 0, 0]))

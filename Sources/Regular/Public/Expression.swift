@@ -3,9 +3,10 @@
 //
 
 public indirect enum Expression<Symbol> {
-    case everything
-    case nothing
+    case all
+    case none
     case empty
+    case some
 
     case any
     case one(Predicate)
@@ -25,7 +26,7 @@ public indirect enum Expression<Symbol> {
 
 // MARK:-
 
-extension Expression {
+public extension Expression {
     
     static func |(_ a: Expression, _ b: Expression) -> Expression {
         .or(a, b)
@@ -66,7 +67,7 @@ extension Expression {
 
 // MARK:-
 
-extension Expression where Symbol: Equatable {
+public extension Expression where Symbol: Equatable {
 
     static func one(_ symbol: Symbol) -> Expression {
         .one { $0 == symbol }
@@ -79,7 +80,7 @@ extension Expression where Symbol: Equatable {
 
 // MARK:-
 
-extension Expression where Symbol: Hashable {
+public extension Expression where Symbol: Hashable {
     static func one(of set: Set<Symbol>) -> Expression {
         .one { set.contains($0) }
     }
@@ -87,7 +88,7 @@ extension Expression where Symbol: Hashable {
 
 // MARK:-
 
-extension Expression where Symbol: Comparable {
+public extension Expression where Symbol: Comparable {
     static func one(in range: Range<Symbol>) -> Expression {
         .one { range.contains($0) }
     }

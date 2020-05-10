@@ -4,7 +4,7 @@
 
 extension NFA {
     
-    static var nothing: NFA {
+    static var none: NFA {
         .init(
             initialStates: .init(),
             acceptanceState: .init(),
@@ -13,8 +13,8 @@ extension NFA {
         )
     }
     
-    static var everything: NFA {
-        !nothing
+    static var all: NFA {
+        !none
     }
     
     static var empty: NFA {
@@ -28,6 +28,10 @@ extension NFA {
         )
     }
     
+    static var some: NFA {
+        !empty
+    }
+
     static var any: NFA {
         symbol { _ in true }
     }
@@ -42,22 +46,6 @@ extension NFA {
             predicateEdges: [initialState: [acceptState: [predicate]]],
             epsilonEdges: .init()
         )
-    }
-    
-    static func |(_ l: NFA, _ r: NFA) -> NFA {
-        let acceptance = Node()
-        let extraEpsilon = [l.acceptanceState, r.acceptanceState].map { EpsilonEdge(source: $0, target: acceptance, isActive: true) }
-        
-        return NFA(
-            initialStates: l.initialStates.union(r.initialStates),
-            acceptanceState: acceptance,
-            predicateEdges: l.predicateEdges.merging(r.predicateEdges, uniquingKeysWith: { _, _ in fatalError("Logic error") }),
-            epsilonEdges: r.epsilonEdges + l.epsilonEdges + extraEpsilon
-        )
-    }
-
-    static func &(_ l: NFA, _ r: NFA) -> NFA {
-        !((!l) | (!r))
     }
     
     static prefix func !(_ nfa: NFA) -> NFA {
@@ -92,6 +80,22 @@ extension NFA {
         )
     }
     
+    static func |(_ l: NFA, _ r: NFA) -> NFA {
+        let acceptance = Node()
+        let extraEpsilon = [l.acceptanceState, r.acceptanceState].map { EpsilonEdge(source: $0, target: acceptance, isActive: true) }
+        
+        return NFA(
+            initialStates: l.initialStates.union(r.initialStates),
+            acceptanceState: acceptance,
+            predicateEdges: l.predicateEdges.merging(r.predicateEdges, uniquingKeysWith: { _, _ in fatalError("Logic error") }),
+            epsilonEdges: r.epsilonEdges + l.epsilonEdges + extraEpsilon
+        )
+    }
+
+    static func &(_ l: NFA, _ r: NFA) -> NFA {
+        !((!l) | (!r))
+    }
+
     static func +(_ l: NFA, _ r: NFA) -> NFA {
         let joinEpsilonEdges = r.initialStates.map { EpsilonEdge(source: l.acceptanceState, target: $0, isActive: true) }
 

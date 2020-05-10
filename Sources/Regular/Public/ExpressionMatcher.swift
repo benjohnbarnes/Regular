@@ -10,9 +10,11 @@ public func matcher<Symbol>(for expression: Expression<Symbol>) -> AnyMatcher<Sy
 
 private func nfaMatcher<Symbol>(for expression: Expression<Symbol>) -> NFA<Symbol> {
     switch expression {
-    case .everything: return .everything
-    case .nothing: return .nothing
+    case .all: return .all
+    case .none: return .none
     case .empty: return .empty
+    case .some: return .some
+
     case .any: return .any
         
     case let .one(predicate): return .symbol(predicate)
