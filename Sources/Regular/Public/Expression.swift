@@ -12,7 +12,13 @@ public indirect enum Expression<Symbol> {
     case empty
     case some
 
-    // Require a symbol that matches a predicate, or reject a symbol matching a predicate.
+    // Require a symbol that matches a predicate, or reject a symbol matching a predicate. Note that negation may not
+    // behave as you expect. Negation of an expression is a new expression matchihg _everything_ that the expression
+    // does not match. So `!.require { $0 == 1 }` matches _everything except_ the symbol 1. This includes
+    // the empty sequence, and any sequence of any length, provided it is not a sequence of a single 1.
+    //
+    // For this reason, two forms are provided: `require` and `reject`. The latter is an expression matching a single
+    // symbol that _does not_ match the predicate.
     case require(Predicate)
     case reject(Predicate)
 
