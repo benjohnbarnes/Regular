@@ -6,17 +6,22 @@ import Foundation
 
 indirect enum Expression<Symbol> {
 
-    case any
-    case predicate(Predicate)
+    case everything
+    case nothing
+    case empty
 
+    case any
+    case one(Predicate)
+    
     case optional(Expression)
     case oneOrMore(Expression)
     case zeroOrMore(Expression)
     case not(Expression)
     
-    case sequence(Expression, Expression)
     case or(Expression, Expression)
     case and(Expression, Expression)
+    case xor(Expression, Expression)
+    case then(Expression, Expression)
 
     typealias Predicate = (Symbol) -> Bool
 }
@@ -33,19 +38,27 @@ extension Expression {
         .and(a, b)
     }
     
-    func then(_ next: Expression) -> Expression {
-        .sequence(self, next)
+    static func ^(_ a: Expression, _ b: Expression) -> Expression {
+        .xor(a, b)
     }
     
+    static func +(_ a: Expression, _ b: Expression) -> Expression {
+        .then(a, b)
+    }
+    
+    static prefix func !(_ e: Expression) -> Expression {
+        .not(e)
+    }
+
     var maybe: Expression {
         .optional(self)
     }
     
-    var star: Expression {
+    var zeroOrMore: Expression {
         .zeroOrMore(self)
     }
     
-    var plus: Expression {
+    var oneOrMore: Expression {
         .oneOrMore(self)
     }
     
@@ -57,17 +70,15 @@ extension Expression {
 // MARK:-
 
 extension Expression where Symbol: Equatable {
-     
-    init(_ symbol: Symbol) {
-        self = .predicate({ $0 == symbol })
+    static func one(_ symbol: Symbol) -> Expression {
+        .one { $0 == symbol }
     }
 }
 
 // MARK:-
 
 extension Expression where Symbol: Hashable {
-    
-    init(_ set: Set<Symbol>) {
-        self = .predicate({ set.contains($0) })
+    static func one(of set: Set<Symbol>) -> Expression {
+        .one { set.contains($0) }
     }
 }

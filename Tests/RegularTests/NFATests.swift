@@ -82,6 +82,19 @@ final class NFATests: XCTestCase {
         XCTAssertFalse(nfa.matches([4]))
     }
 
+//    func test_1Or2XOR2Or3_matches1And3ButNot2() {
+//        let nfa: NFA<Int> = .symbol({ 1...2 ~= $0 }) ^ .symbol({ 2...3 ~= $0 })
+//
+//        XCTAssertTrue(nfa.matches([1]))
+//        XCTAssertTrue(nfa.matches([3]))
+//
+//        XCTAssertFalse(nfa.matches([]))
+//        XCTAssertFalse(nfa.matches([2]))
+//        XCTAssertFalse(nfa.matches([1,2]))
+//        XCTAssertFalse(nfa.matches([2,1]))
+//        XCTAssertFalse(nfa.matches([4]))
+//    }
+    
     func test_1Or2And2Or3_matchesOnly2() {
         let nfa: NFA<Int> = .symbol({ 1...2 ~= $0 }) & .symbol({ 2...3 ~= $0 })
 
@@ -94,7 +107,7 @@ final class NFATests: XCTestCase {
     }
 
     func test_1then2_matches1Then2() {
-        let nfa = NFA<Int>.symbol({ $0 == 1 }).then(.symbol({ $0 == 2 }))
+        let nfa = NFA<Int>.symbol({ $0 == 1 }) + .symbol({ $0 == 2 })
 
         XCTAssertTrue(nfa.matches([1,2]))
 
@@ -107,7 +120,7 @@ final class NFATests: XCTestCase {
     }
     
     func test_1then2then3() {
-        let nfa: NFA<Int> = NFA<Int>.symbol({ $0 == 1 }).then(.symbol({ $0 == 2 })).then(.symbol({ $0 == 3}))
+        let nfa: NFA<Int> = NFA<Int>.symbol({ $0 == 1 }) + NFA<Int>.symbol({ $0 == 2 }) + NFA<Int>.symbol({ $0 == 3 })
 
         XCTAssertTrue(nfa.matches([1,2,3]))
 
@@ -122,7 +135,7 @@ final class NFATests: XCTestCase {
     }
     
     func test_not1then2then3() {
-        let nfa: NFA<Int> = !(NFA<Int>.symbol({ $0 == 1 }).then(.symbol({ $0 == 2 })).then(.symbol({ $0 == 3})))
+        let nfa: NFA<Int> = !(NFA<Int>.symbol { $0 == 1 } + NFA<Int>.symbol { $0 == 2 } + NFA<Int>.symbol { $0 == 3 })
 
         XCTAssertFalse(nfa.matches([1,2,3]))
 
@@ -231,7 +244,7 @@ final class NFATests: XCTestCase {
     }
 
     func test_1AtFourFromEnd() {
-        let nfa: NFA<Int> = .sequence([.all, .symbol { $0 == 1 }, .symbol, .symbol, .symbol])
+        let nfa: NFA<Int> = NFA.all + .symbol { $0 == 1 } + .symbol + .symbol + .symbol
         
         XCTAssertTrue(nfa.matches([1, 0, 0, 0]))
         XCTAssertTrue(nfa.matches([1, 1, 0, 0]))

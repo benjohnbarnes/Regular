@@ -79,8 +79,7 @@ public extension NFA {
     static func &(_ l: NFA, _ r: NFA) -> NFA {
         !((!l) | (!r))
     }
-
-
+    
     static prefix func !(_ nfa: NFA) -> NFA {
         let newAcceptance = Node()
         
@@ -113,21 +112,15 @@ public extension NFA {
         )
     }
     
-    func then(_ next: NFA) -> NFA {
-        let joinEpsilonEdges = next.initialStates.map { initialState in
-            return EpsilonEdge(source: acceptanceState, target: initialState, isActive: true)
-        }
+    static func +(_ l: NFA, _ r: NFA) -> NFA {
+        let joinEpsilonEdges = r.initialStates.map { EpsilonEdge(source: l.acceptanceState, target: $0, isActive: true) }
 
         return NFA(
-            initialStates: initialStates,
-            acceptanceState: next.acceptanceState,
-            predicateEdges: predicateEdges.merging(next.predicateEdges, uniquingKeysWith: { _, _ in fatalError("Logic error") }),
-            epsilonEdges: epsilonEdges + next.epsilonEdges + joinEpsilonEdges
+            initialStates: l.initialStates,
+            acceptanceState: r.acceptanceState,
+            predicateEdges: l.predicateEdges.merging(r.predicateEdges, uniquingKeysWith: { _, _ in fatalError("Logic error") }),
+            epsilonEdges: l.epsilonEdges + r.epsilonEdges + joinEpsilonEdges
         )
-    }
-    
-    static func sequence(_ s: [NFA]) -> NFA {
-        s.reduce(.empty) { $0.then($1) }
     }
 }
 
