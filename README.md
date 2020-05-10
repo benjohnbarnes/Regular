@@ -15,6 +15,6 @@ Regular is currently work in progress. However, Regular has an NFA based matchin
 and building matchers from them.
 
 # TODO
-- [ ] Test Expression. 
+- [ ] Expression Tests of composites and modifiers.
 - [ ] Check it's actually useful for building expressions and matchers.
 - [ ] Ensure naming in expression algebra isn't overly verbose.
