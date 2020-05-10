@@ -2,14 +2,17 @@
 
 A Swift regular expression library supporting: 
 
-* **Genericly typed symbols** – not only characters, but _any_ Swift type.
-* **Predicate based symbol matching** – check if a vector is short of long. Check if a colour is red or green. Check if an event was critical or
-benign.
-* **Expression negation** – this allows `!` and `&` in expressions, as well as the more usualy used `|`.
-* **Linear run time** in the length of the input sequence (and linear in the size of the expression).
+* **Genericly typed symbols** – not only characters, but _all_ Swift types.
+* **Predicate based symbol matching** – check if a `Speed` is `fast` of `slow`. Check if a `Color` is `red` or `green`. Check if a 
+`NetworkEvent` was `critical` or `benign`.
+* **Expression negation** – Regular provides `&` in expressions and supports _all_ boolean functions of sub expressions, not just the usual
+`|`.
+* **Linear run time** and constant memory use in the input sequence length.
 
 Regular is inteded as a way to specifcy and validate event sequence expectations in unit tests. Maybe it's useful for something else too? 
 
-Regular is currently work in progress.
+Regular is currently work in progress. However, Regular has an NFA based matching implementation, and an API for creating expressions 
+and building matchers from them.
 
-However, Regular has an NFA based matching implementation, and an API for creating expressions and building matchers from them.
+# TODO
+- [ ] Test Expression. Check it's actually useful for building expressions and matchers, that naming is okay and it's not too verbose.
