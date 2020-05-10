@@ -3,19 +3,29 @@
 //
 
 public indirect enum Expression<Symbol> {
-    case all
-    case none
+
+    // Match nothing at all, and the inverse – anything at all.
+    case nothing
+    case anything
+
+    // Match the empty sequence, and any sequence that is not empty
     case empty
     case some
 
+    // Require a symbol that matches a predicate, or reject a symbol matching a predicate.
+    case require(Predicate)
+    case reject(Predicate)
+
+    // Match any one symbol.
     case any
-    case one(Predicate)
     
+    // Modify expressions.
     case optional(Expression)
     case oneOrMore(Expression)
     case zeroOrMore(Expression)
     case not(Expression)
     
+    // Combine expressions.
     case or(Expression, Expression)
     case and(Expression, Expression)
     case xor(Expression, Expression)
@@ -69,27 +79,41 @@ public extension Expression {
 
 public extension Expression where Symbol: Equatable {
 
-    static func one(_ symbol: Symbol) -> Expression {
-        .one { $0 == symbol }
+    static func require(_ symbol: Symbol) -> Expression {
+        .require { $0 == symbol }
     }
 
-    static func sequence(_ symbols: [Symbol]) -> Expression {
-        symbols.reduce(.empty) { $0 + .one($1) }
+    static func reject(_ symbol: Symbol) -> Expression {
+        .reject { $0 == symbol }
+    }
+
+    static func require(_ symbols: [Symbol]) -> Expression {
+        symbols.reduce(.empty) { $0 + .require($1) }
     }
 }
 
 // MARK:-
 
 public extension Expression where Symbol: Hashable {
-    static func one(of set: Set<Symbol>) -> Expression {
-        .one { set.contains($0) }
+    
+    static func require(anyOf set: Set<Symbol>) -> Expression {
+        .require { set.contains($0) }
+    }
+
+    static func reject(allOf set: Set<Symbol>) -> Expression {
+        .reject { set.contains($0) }
     }
 }
 
 // MARK:-
 
 public extension Expression where Symbol: Comparable {
-    static func one(in range: Range<Symbol>) -> Expression {
-        .one { range.contains($0) }
+    
+    static func require(in range: Range<Symbol>) -> Expression {
+        .require { range.contains($0) }
+    }
+
+    static func reject(in range: Range<Symbol>) -> Expression {
+        .reject { range.contains($0) }
     }
 }
