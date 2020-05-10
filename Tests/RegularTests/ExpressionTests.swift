@@ -7,6 +7,28 @@ import XCTest
 
 final class ExpressionTests: XCTestCase {
     
+    func test_whatever() {
+
+        let expression: Expression<Int> = .whatever
+        let matcher = createMatcher(for: expression)
+        
+        XCTAssertTrue(matcher.matches([]))
+        XCTAssertTrue(matcher.matches([1]))
+        XCTAssertTrue(matcher.matches([1, 2]))
+        XCTAssertTrue(matcher.matches([1, 2, 3, 4, 1, 0, 1]))
+    }
+
+    func test_nothing() {
+
+        let expression: Expression<Int> = .nothing
+        let matcher = createMatcher(for: expression)
+        
+        XCTAssertFalse(matcher.matches([]))
+        XCTAssertFalse(matcher.matches([1]))
+        XCTAssertFalse(matcher.matches([1, 2]))
+        XCTAssertFalse(matcher.matches([1, 2, 3, 4, 1, 0, 1]))
+    }
+
     func test_matchA1() {
         
         let expression: Expression<Int> = .require(1)
@@ -97,6 +119,8 @@ final class ExpressionTests: XCTestCase {
         XCTAssertTrue(matcher.matches([3, 2, 1, 2, 3]))
         XCTAssertTrue(matcher.matches([1, 2, 3]))
         XCTAssertTrue(matcher.matches([3, 2, 1]))
+        XCTAssertTrue(matcher.matches([3, 2, 1, 1, 2, 3]))
+        XCTAssertTrue(matcher.matches([1, 3, 2, 1, 1, 2, 3, 1]))
         XCTAssertTrue(matcher.matches([1, 1, 1, 1]))
         XCTAssertTrue(matcher.matches([1, 1, 2, 1, 1]))
 

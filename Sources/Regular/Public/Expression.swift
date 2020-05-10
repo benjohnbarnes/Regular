@@ -4,7 +4,7 @@
 
 public indirect enum Expression<Symbol> {
 
-    // Match nothing at all, and the inverse – whatever.
+    // Match nothing at all, and the inverse – whatever: anything at all.
     //
     case nothing
     case whatever
