@@ -2,8 +2,7 @@
 //  Created by Benjohn on 30/04/2020.
 //
 
-
-public struct NFA<Symbol> {
+struct NFA<Symbol> {
     let initialStates: Set<Node>
     let acceptanceState: Node
     let predicateEdges: [Node: [Node: [Predicate]]]
@@ -11,9 +10,11 @@ public struct NFA<Symbol> {
     typealias Predicate = (Symbol) -> Bool
 }
 
-extension NFA: SequenceMatching {
+// MARK:-
+
+extension NFA: Matcher {
     
-    public func matches<S: Sequence>(_ symbols: S) -> Bool where S.Element == Symbol {
+    func matches<S: Sequence>(_ symbols: S) -> Bool where S.Element == Symbol {
         let initialState = propagateEpsilonEdges(fromActiveStates: initialStates)
         let finalState = symbols.reduce(initialState, self.step(state:with:))
         return stateRepresentsAcceptance(finalState)
@@ -22,9 +23,9 @@ extension NFA: SequenceMatching {
 
 // MARK:-
 
-public extension NFA {
+extension NFA {
     
-    static var none: NFA {
+    static var nothing: NFA {
         .init(
             initialStates: .init(),
             acceptanceState: .init(),
@@ -33,8 +34,8 @@ public extension NFA {
         )
     }
     
-    static var all: NFA {
-        !none
+    static var everything: NFA {
+        !nothing
     }
     
     static var empty: NFA {
@@ -48,7 +49,7 @@ public extension NFA {
         )
     }
     
-    static var symbol: NFA {
+    static var any: NFA {
         symbol { _ in true }
     }
     
@@ -95,11 +96,11 @@ public extension NFA {
         self | .empty
     }
     
-    var star: NFA {
-        plus | .empty
+    var zeroOrMore: NFA {
+        oneOrMore | .empty
     }
     
-    var plus: NFA {
+    var oneOrMore: NFA {
         let loopEpsilonEdges = initialStates.map { initialState in
             return EpsilonEdge(source: acceptanceState, target: initialState, isActive: true)
         }

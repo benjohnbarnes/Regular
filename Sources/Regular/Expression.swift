@@ -2,10 +2,7 @@
 //  Created by Benjohn on 30/04/2020.
 //
 
-import Foundation
-
-indirect enum Expression<Symbol> {
-
+public indirect enum Expression<Symbol> {
     case everything
     case nothing
     case empty
@@ -20,10 +17,9 @@ indirect enum Expression<Symbol> {
     
     case or(Expression, Expression)
     case and(Expression, Expression)
-    case xor(Expression, Expression)
     case then(Expression, Expression)
 
-    typealias Predicate = (Symbol) -> Bool
+    public typealias Predicate = (Symbol) -> Bool
 }
 
 // MARK:-
@@ -36,10 +32,6 @@ extension Expression {
     
     static func &(_ a: Expression, _ b: Expression) -> Expression {
         .and(a, b)
-    }
-    
-    static func ^(_ a: Expression, _ b: Expression) -> Expression {
-        .xor(a, b)
     }
     
     static func +(_ a: Expression, _ b: Expression) -> Expression {
@@ -80,5 +72,13 @@ extension Expression where Symbol: Equatable {
 extension Expression where Symbol: Hashable {
     static func one(of set: Set<Symbol>) -> Expression {
         .one { set.contains($0) }
+    }
+}
+
+// MARK:-
+
+extension Expression where Symbol: Comparable {
+    static func one(in range: Range<Symbol>) -> Expression {
+        .one { range.contains($0) }
     }
 }
