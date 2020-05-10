@@ -10,4 +10,6 @@ benign.
 
 Regular is inteded as a way to specifcy and validate event sequence expectations in unit tests. Maybe it's useful for something else too? 
 
-Regular is currently work in progress. It does not yet have a designed public API. It does have an NFA implementation that proove the concept by implementing the objectives.
+Regular is currently work in progress.
+
+However, Regular has an NFA based matching implementation, and an API for creating expressions and building matchers from them.
