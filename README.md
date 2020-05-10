@@ -1,6 +1,6 @@
 # Regular
 
-A Swift regular expression library supporting: 
+A Swift [regular expression](https://en.wikipedia.org/wiki/Regular_language) library supporting: 
 
 * **Generically typed symbols** – not only characters, but _all_ Swift types.
 * **Predicate based symbol matching** – check if a `Speed` is `fast` of `slow`. Check if a `Color` is `red` or `green`. Check if a 
@@ -13,6 +13,13 @@ to write tests. Maybe it is useful for something else too?
 
 Regular is currently work in progress. However, Regular has an NFA based matching implementation, and an API for creating expressions 
 and building matchers from them.
+
+# What Regular isn't
+
+Regular is not a string based regular expression library and does not attempt to support the syntax of string based regular expressions.
+Lots of libraries do this already, and Swift has support in its standard library. 
+
+Regular wants to let you use the same kinds of concept to process sequences of _anything_.
 
 # TODO
 - [ ] Expression Tests of composites and modifiers.
