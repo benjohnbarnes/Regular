@@ -67,8 +67,13 @@ extension Expression {
 // MARK:-
 
 extension Expression where Symbol: Equatable {
+
     static func one(_ symbol: Symbol) -> Expression {
         .one { $0 == symbol }
+    }
+
+    static func sequence(_ symbols: [Symbol]) -> Expression {
+        symbols.reduce(.empty) { $0 + .one($1) }
     }
 }
 
