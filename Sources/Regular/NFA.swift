@@ -11,9 +11,9 @@ public struct NFA<Symbol> {
     typealias Predicate = (Symbol) -> Bool
 }
 
-public extension NFA {
+extension NFA: SequenceMatching {
     
-    func matches<S: Sequence>(_ symbols: S) -> Bool where S.Element == Symbol {
+    public func matches<S: Sequence>(_ symbols: S) -> Bool where S.Element == Symbol {
         let initialState = propagateEpsilonEdges(fromActiveStates: initialStates)
         let finalState = symbols.reduce(initialState, self.step(state:with:))
         return stateRepresentsAcceptance(finalState)

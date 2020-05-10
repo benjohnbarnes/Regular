@@ -2,8 +2,9 @@
 
 A Swift regular expression library supporting: 
 
-* Genericly typed symbols – not just characters, but absolutely any Swift type.
-* Predicate based symbol matching – check if a vector is short of long. Check if a colour is red. Check if an event was critical.
+* Genericly typed symbols – not only characters, but _any_ Swift type.
+* Predicate based symbol matching – check if a vector is short of long. Check if a colour is red or gressn. Check if an event was critical or
+benign.
 * Expression negation – this allows `!`, `&` and `^` in expressions, as well as the more usualy used `|`.
 * Run time linear in the length of the input sequence (and linear in the size of the expression).
 
