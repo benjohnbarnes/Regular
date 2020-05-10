@@ -6,7 +6,7 @@ public func matcher<Symbol>(for expression: Expression<Symbol>) -> AnyMatcher<Sy
     nfaMatcher(for: expression).asAny
 }
 
-// MARK: -
+// MARK:-
 
 private func nfaMatcher<Symbol>(for expression: Expression<Symbol>) -> NFA<Symbol> {
     switch expression {

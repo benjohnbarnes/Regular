@@ -14,7 +14,7 @@ extension Matcher {
     }
 }
 
-// MARK: -
+// MARK:-
 
 public struct AnyMatcher<Symbol>: Matcher {
     
