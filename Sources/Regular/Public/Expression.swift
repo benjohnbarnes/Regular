@@ -4,11 +4,13 @@
 
 public indirect enum Expression<Symbol> {
 
-    // Match nothing at all, and the inverse – anything at all.
+    // Match nothing at all, and the inverse – whatever.
+    //
     case nothing
-    case anything
+    case whatever
 
     // Match the empty sequence, and any sequence that is not empty
+    //
     case empty
     case some
 
@@ -19,19 +21,23 @@ public indirect enum Expression<Symbol> {
     //
     // For this reason, two forms are provided: `require` and `reject`. The latter is an expression matching a single
     // symbol that _does not_ match the predicate.
+    //
     case require(Predicate)
     case reject(Predicate)
 
     // Match any one symbol.
-    case any
+    //
+    case any1
     
     // Modify expressions.
+    //
     case optional(Expression)
     case oneOrMore(Expression)
     case zeroOrMore(Expression)
     case not(Expression)
     
     // Combine expressions.
+    //
     case or(Expression, Expression)
     case and(Expression, Expression)
     case xor(Expression, Expression)
