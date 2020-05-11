@@ -2,18 +2,18 @@
 
 A Swift [regular expression](https://en.wikipedia.org/wiki/Regular_language) library supporting: 
 
-* **Generically typed symbols** – not only `String`s of `Character`, but _all_ Swift types in any `Sequence`.
-* **Predicate based symbol matching** – check if a `Speed` is `fast` of `slow`. Check if a `Color` is `red` or `green`. Check if a 
-`NetworkEvent` was `critical` or `benign`.
+* **Generically typed symbols** – Not only `String`s of `Character`, but _all_ Swift types in any `Sequence`.
+* **Predicate based symbol matching** – Define match conditions on symbols such as `.require { $0.speed < 30 }`,
+`.require { $0.color.isFairlyRed }`, or `require { $0.networkEvent.completedWithoutError }`.
 * **Expression negation** – Regular provides `&` in expressions and supports _all_ boolean functions of subexpressions, not only `|`.
 * **Linear run time** and constant memory use in the input sequence length.
 
 # What is Regular for?
 
-Regular is intended as a way to specify and validate event sequence expectations in tests, and to validate if this is actually a good way
-to write tests. 
+Regular is intended as a way to specify and validate event sequence expectations in tests, and to investigate whether this is a sensible 
+thing to do in test specifications.
 
-Maybe it is useful for something else too?
+It might be useful for something else though.
 
 # What isn't Regular for?
 
@@ -21,8 +21,8 @@ Regular is not a string based regular expression library and does not attempt to
 Lots of libraries do this already, and Swift has support in its standard library.  Regular wants to let you use the same kinds of concept to
 process sequences of _anything_.
 
-Regular is unlkely to be fast and I've not made any effort in this direction yet. The underlying algorithms should support efficient
-implementation, though. 
+Regular is unlkely to be fast and I've not made any optimisation effort yet. However, the underlying algorithm is linear time time and
+contant space, and various optimisations could be made without a change of API.
 
 # TODO
 
