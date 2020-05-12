@@ -36,20 +36,32 @@ public indirect enum Expression<Symbol> {
     case zeroOrMore(Expression)
     case not(Expression)
     
-    // Combine expressions.
+    // Logically combine expressions.
     //
     case or(Expression, Expression)
     case and(Expression, Expression)
     case xor(Expression, Expression)
+    
+    // Sequentially combine expressions.
     case then(Expression, Expression)
 
     public typealias Predicate = (Symbol) -> Bool
 }
 
-// MARK:-
+// MARK:- Sequencing
+// Sequentially combine expressions together. A matcher must match the first, and then the second.
 
 public extension Expression {
+
+    static func +(_ first: Expression, _ second: Expression) -> Expression {
+        .then(first, second)
+    }
+}
+
+// MARK:- Logically combine
     
+public extension Expression {
+
     static func |(_ a: Expression, _ b: Expression) -> Expression {
         .or(a, b)
     }
@@ -61,16 +73,17 @@ public extension Expression {
     static func ^(_ a: Expression, _ b: Expression) -> Expression {
         .xor(a, b)
     }
-    
-    static func +(_ a: Expression, _ b: Expression) -> Expression {
-        .then(a, b)
-    }
-    
+}
+
+// MARK:- Expression modifiers
+
+public extension Expression {
+
     static prefix func !(_ e: Expression) -> Expression {
         .not(e)
     }
 
-    var maybe: Expression {
+    var optional: Expression {
         .optional(self)
     }
     

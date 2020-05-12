@@ -15,7 +15,7 @@ struct NFA<Symbol> {
 extension NFA: Matcher {
     
     func matches<S: Sequence>(_ symbols: S) -> Bool where S.Element == Symbol {
-        let initialState = propagateEpsilonEdges(fromActiveStates: initialStates)
+        let initialState = propagateEpsilonEdges(fromActiveStates: self.initialStates)
         let finalState = symbols.reduce(initialState, self.step(state:with:))
         return stateRepresentsAcceptance(finalState)
     }

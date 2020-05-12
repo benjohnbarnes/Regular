@@ -44,7 +44,7 @@ final class NFATests: XCTestCase {
     }
     
     func test_matchOne_matchesOne() {
-        let nfa = NFA<Int>.symbol({ $0 == 0 })
+        let nfa = zero
 
         XCTAssertTrue(nfa.matches([0]))
 
@@ -56,7 +56,7 @@ final class NFATests: XCTestCase {
     }
 
     func test_matchOneInverted_matchesAnythingButOne() {
-        let nfa = !NFA<Int>.symbol({ $0 == 0 })
+        let nfa = !zero
 
         XCTAssertTrue(nfa.matches([]))
         XCTAssertTrue(nfa.matches([1]))
@@ -68,7 +68,7 @@ final class NFATests: XCTestCase {
     }
     
     func test_match1Or2_andNot1_matches2AndNot1() {
-        let nfa: NFA<Int> = .symbol({ 1...2 ~= $0 }) & !.symbol({ $0 == 1 })
+        let nfa: NFA<Int> = .symbol({ 1...2 ~= $0 }) & !one
         
         XCTAssertTrue(nfa.matches([2]))
 
@@ -109,7 +109,7 @@ final class NFATests: XCTestCase {
     }
 
     func test_1then2_matches1Then2() {
-        let nfa = NFA<Int>.symbol({ $0 == 1 }) + .symbol({ $0 == 2 })
+        let nfa = one + two
 
         XCTAssertTrue(nfa.matches([1,2]))
 
@@ -122,7 +122,7 @@ final class NFATests: XCTestCase {
     }
     
     func test_1then2then3() {
-        let nfa: NFA<Int> = NFA<Int>.symbol({ $0 == 1 }) + NFA<Int>.symbol({ $0 == 2 }) + NFA<Int>.symbol({ $0 == 3 })
+        let nfa: NFA<Int> = one + two + three
 
         XCTAssertTrue(nfa.matches([1,2,3]))
 
@@ -137,7 +137,7 @@ final class NFATests: XCTestCase {
     }
     
     func test_1ThenAnything() {
-        let nfa: NFA<Int> = NFA<Int>.symbol({ $0 == 1 }) + NFA<Int>.all
+        let nfa: NFA<Int> = one + NFA<Int>.all
 
         XCTAssertTrue(nfa.matches([1]))
         XCTAssertTrue(nfa.matches([1, 1]))
@@ -152,7 +152,7 @@ final class NFATests: XCTestCase {
     }
     
     func test_1ThenAnythingThen1() {
-        let nfa: NFA<Int> = NFA<Int>.symbol({ $0 == 1 }) + NFA<Int>.all + NFA<Int>.symbol({ $0 == 1 })
+        let nfa: NFA<Int> = one + NFA<Int>.all + one
 
         XCTAssertTrue(nfa.matches([1,1]))
         XCTAssertTrue(nfa.matches([1, 2, 1]))
@@ -164,8 +164,13 @@ final class NFATests: XCTestCase {
         XCTAssertFalse(nfa.matches([2, 1]))
     }
     
+    func test_failure() {
+        let nfa: NFA<Int> = one + NFA<Int>.all + one
+        XCTAssertFalse(nfa.matches([1]))
+    }
+    
     func test_not1then2then3() {
-        let nfa: NFA<Int> = !(NFA<Int>.symbol { $0 == 1 } + NFA<Int>.symbol { $0 == 2 } + NFA<Int>.symbol { $0 == 3 })
+        let nfa: NFA<Int> = !(one + two + three)
 
         XCTAssertFalse(nfa.matches([1,2,3]))
 
@@ -180,7 +185,7 @@ final class NFATests: XCTestCase {
     }
     
     func test_1optional() {
-        let nfa =  NFA<Int>.symbol({ $0 == 1 }).optional
+        let nfa =  one.optional
         
         XCTAssertTrue(nfa.matches([]))
         XCTAssertTrue(nfa.matches([1]))
@@ -190,7 +195,7 @@ final class NFATests: XCTestCase {
     }
     
     func test_not1optional() {
-        let nfa: NFA<Int> =  !(NFA.symbol({ $0 == 1 }).optional)
+        let nfa: NFA<Int> =  !(one.optional)
         
         XCTAssertFalse(nfa.matches([]))
         XCTAssertFalse(nfa.matches([1]))
@@ -200,7 +205,7 @@ final class NFATests: XCTestCase {
     }
     
     func test_1plus() {
-        let nfa = NFA<Int>.symbol({ $0 == 1 }).oneOrMore
+        let nfa = one.oneOrMore
         
         XCTAssertTrue(nfa.matches([1]))
         XCTAssertTrue(nfa.matches([1, 1]))
@@ -213,7 +218,7 @@ final class NFATests: XCTestCase {
     }
     
     func test_not1Plus() {
-        let nfa = !(NFA<Int>.symbol({ $0 == 1 }).oneOrMore)
+        let nfa = !(one.oneOrMore)
         
         XCTAssertFalse(nfa.matches([1]))
         XCTAssertFalse(nfa.matches([1, 1]))
@@ -226,7 +231,7 @@ final class NFATests: XCTestCase {
     }
 
     func test_1star() {
-        let nfa = NFA<Int>.symbol({ $0 == 1 }).zeroOrMore
+        let nfa = one.zeroOrMore
         
         XCTAssertTrue(nfa.matches([]))
         XCTAssertTrue(nfa.matches([1]))
@@ -239,7 +244,7 @@ final class NFATests: XCTestCase {
     }
     
     func test_not1star() {
-        let nfa: NFA<Int> = !(NFA.symbol({ $0 == 1 }).zeroOrMore)
+        let nfa: NFA<Int> = !(one.zeroOrMore)
         
         XCTAssertFalse(nfa.matches([]))
         XCTAssertFalse(nfa.matches([1]))
@@ -274,7 +279,7 @@ final class NFATests: XCTestCase {
     }
 
     func test_1AtFourFromEnd() {
-        let nfa: NFA<Int> = NFA.all + .symbol { $0 == 1 } + .any + .any + .any
+        let nfa: NFA<Int> = NFA.all + one + .any + .any + .any
         
         XCTAssertTrue(nfa.matches([1, 0, 0, 0]))
         XCTAssertTrue(nfa.matches([1, 1, 0, 0]))
@@ -289,4 +294,29 @@ final class NFATests: XCTestCase {
         XCTAssertFalse(nfa.matches([1, 1]))
         XCTAssertFalse(nfa.matches([1, 1, 1]))
     }
+
+    func test_1None1() {
+        let nfa: NFA<Int> = one + .none + one
+        
+        XCTAssertTrue(nfa.matches([]))
+        XCTAssertTrue(nfa.matches([1]))
+        XCTAssertTrue(nfa.matches([1, 2]))
+        XCTAssertTrue(nfa.matches([2, 1]))
+        XCTAssertTrue(nfa.matches([2, 2, 2, 2]))
+        XCTAssertTrue(nfa.matches([2, 1, 1, 2]))
+
+        XCTAssertFalse(nfa.matches([1, 1]))
+        XCTAssertFalse(nfa.matches([1, 1, 1]))
+    }
 }
+
+// MARK: -
+
+private extension NFATests {
+
+    var zero: NFA<Int> { .symbol { $0 == 0 } }
+    var one: NFA<Int> { .symbol { $0 == 1 } }
+    var two: NFA<Int> { .symbol { $0 == 2 } }
+    var three: NFA<Int> { .symbol { $0 == 3 } }
+}
+
