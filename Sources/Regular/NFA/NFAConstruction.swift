@@ -5,15 +5,7 @@
 extension NFA {
     
     static var all: NFA {
-        let initial = Node()
-        let accept = Node()
-
-        return .init(
-            initialStates: .init([initial]),
-            acceptanceState: accept,
-            predicateEdges: [accept: [accept: [{ _ in true }]]],
-            epsilonEdges: [EpsilonEdge(source: initial, target: accept, isActive: true)]
-        )
+        return self.any.zeroOrMore
     }
     
     static var none: NFA {
