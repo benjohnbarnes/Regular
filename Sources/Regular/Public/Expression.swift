@@ -148,6 +148,28 @@ public extension Expression {
     }
 }
 
+// MARK:- Repetition {
+
+public extension Expression {
+    
+    func repeated(count: Int) -> Expression {
+        Array(repeating: self, count: count).reduce(.empty, +)
+    }
+    
+    func repeated(atLeast minimum: Int) -> Expression {
+        self.repeated(count: minimum) + self.zeroOrMore
+    }
+    
+    func repeated(upTo maximum: Int) -> Expression {
+        self.repeated(range: 0...maximum)
+    }
+    
+    func repeated(range: ClosedRange<Int>) -> Expression {
+        let optionals = range.upperBound - range.lowerBound
+        return (self.repeated(count: range.lowerBound)) + (self.optional.repeated(count: optionals))
+    }
+}
+
 // MARK:-
 
 public extension Expression where Symbol: Equatable {

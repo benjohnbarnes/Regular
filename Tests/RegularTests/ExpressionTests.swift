@@ -146,4 +146,63 @@ final class ExpressionTests: XCTestCase {
         XCTAssertFalse(matcher.matches([2, 3]))
         XCTAssertFalse(matcher.matches([3, 2, 1]))
     }
+    
+    func test_repeated() {
+        let expression: Expression<Int> = Expression.any1.repeated(count: 4)
+        let matcher = createMatcher(for: expression)
+        
+        XCTAssertTrue(matcher.matches([1, 1, 1, 1]))
+        XCTAssertTrue(matcher.matches([2, 2, 2, 2]))
+        XCTAssertTrue(matcher.matches([1, 2, 3, 4]))
+
+        XCTAssertFalse(matcher.matches([]))
+        XCTAssertFalse(matcher.matches([1]))
+        XCTAssertFalse(matcher.matches([1, 1]))
+        XCTAssertFalse(matcher.matches([1, 1, 1]))
+
+        XCTAssertFalse(matcher.matches([1, 1, 1, 1, 1]))
+    }
+    
+    func test_repeatedAtLeast() {
+        let expression: Expression<Int> = Expression.any1.repeated(atLeast: 3)
+        let matcher = createMatcher(for: expression)
+
+        XCTAssertTrue(matcher.matches([1, 1, 1]))
+        XCTAssertTrue(matcher.matches([2, 2, 2]))
+        XCTAssertTrue(matcher.matches([1, 2, 3]))
+        XCTAssertTrue(matcher.matches([1, 1, 1, 1, 1, 1]))
+        XCTAssertTrue(matcher.matches([2, 2, 2, 2, 2, 2, 2, 2]))
+        XCTAssertTrue(matcher.matches([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
+
+        XCTAssertFalse(matcher.matches([]))
+        XCTAssertFalse(matcher.matches([1]))
+        XCTAssertFalse(matcher.matches([1, 1]))
+        XCTAssertFalse(matcher.matches([2, 2]))
+    }
+    
+    func test_repeatedRange() {
+        let expression: Expression<Int> = Expression.any1.repeated(range: 2...4)
+        let matcher = createMatcher(for: expression)
+
+        XCTAssertTrue(matcher.matches([1, 1]))
+        XCTAssertTrue(matcher.matches([2, 2, 2]))
+        XCTAssertTrue(matcher.matches([1, 2, 3, 4]))
+
+        XCTAssertFalse(matcher.matches([]))
+        XCTAssertFalse(matcher.matches([1]))
+        XCTAssertFalse(matcher.matches([1, 1, 1, 1, 1]))
+    }
+
+    func test_repeatedUpTo() {
+        let expression: Expression<Int> = Expression.any1.repeated(upTo: 4)
+        let matcher = createMatcher(for: expression)
+
+        XCTAssertTrue(matcher.matches([]))
+        XCTAssertTrue(matcher.matches([1]))
+        XCTAssertTrue(matcher.matches([1, 1]))
+        XCTAssertTrue(matcher.matches([2, 2, 2]))
+        XCTAssertTrue(matcher.matches([1, 2, 3, 4]))
+
+        XCTAssertFalse(matcher.matches([1, 1, 1, 1, 1]))
+    }
 }
