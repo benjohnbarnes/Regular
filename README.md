@@ -17,8 +17,8 @@ It might be useful for something else though.
 
 # What isn't Regular for?
 
-Regular is not a string based regular expression library and does not attempt to support the syntax of string based regular expressions.
-Lots of libraries do this already, and Swift has support in its standard library.  Regular wants to let you use the same kinds of concept to
+Regular is not a RegEx library for string based regular expressions. It does not attempt to support the syntax of RegEx.
+Lots of libraries do this already and Swift already has support. Regular's intent is to let you use the same concepts to
 process sequences of _anything_.
 
 Regular is unlkely to be fast and I've not made any optimisation effort yet. However, the underlying algorithm is linear time time and
