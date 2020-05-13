@@ -10,8 +10,8 @@ public func createMatcher<Symbol>(for expression: Expression<Symbol>) -> AnyMatc
 
 private func nfaMatcher<Symbol>(for expression: Expression<Symbol>) -> NFA<Symbol> {
     switch expression {
-    case .whatever: return .all
-    case .nothing: return .none
+    case .anything: return .all
+    case .zero: return .none
     case .empty: return .empty
     case .some: return .some
 

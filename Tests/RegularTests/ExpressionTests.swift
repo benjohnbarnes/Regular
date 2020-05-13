@@ -9,7 +9,7 @@ final class ExpressionTests: XCTestCase {
     
     func test_whatever() {
 
-        let expression: Expression<Int> = .whatever
+        let expression: Expression<Int> = .anything
         let matcher = createMatcher(for: expression)
         
         XCTAssertTrue(matcher.matches([]))
@@ -20,7 +20,7 @@ final class ExpressionTests: XCTestCase {
 
     func test_nothing() {
 
-        let expression: Expression<Int> = .nothing
+        let expression: Expression<Int> = .zero
         let matcher = createMatcher(for: expression)
         
         XCTAssertFalse(matcher.matches([]))
@@ -58,7 +58,7 @@ final class ExpressionTests: XCTestCase {
     
     func test_matchA1ThenAnythingThenAnythingButA1() {
 
-        let expression: Expression<Int> = .require(1) + .whatever + .reject(1)
+        let expression: Expression<Int> = .require(1) + .anything + .reject(1)
         let matcher = createMatcher(for: expression)
         
         XCTAssertTrue(matcher.matches([1, 2]))
@@ -75,7 +75,7 @@ final class ExpressionTests: XCTestCase {
     
     func test_matchAnythingBut1ThenAnythingThen1() {
 
-        let expression: Expression<Int> = .reject(1) + .whatever + .require(1)
+        let expression: Expression<Int> = .reject(1) + .anything + .require(1)
         let matcher = createMatcher(for: expression)
         
         XCTAssertTrue(matcher.matches([2, 1]))
@@ -92,7 +92,7 @@ final class ExpressionTests: XCTestCase {
     
     func test_matchA1ThenAnythingThenA1() {
 
-        let expression: Expression<Int> = .require(1) + .whatever + .require(1)
+        let expression: Expression<Int> = .require(1) + .anything + .require(1)
         let matcher = createMatcher(for: expression)
         
         XCTAssertTrue(matcher.matches([1, 1]))
@@ -112,7 +112,7 @@ final class ExpressionTests: XCTestCase {
 
     func test_aSequenceHavingA1() {
         
-        let expression: Expression<Int> = .whatever + .require(1) + .whatever
+        let expression: Expression<Int> = .anything + .require(1) + .anything
         let matcher = createMatcher(for: expression)
         
         XCTAssertTrue(matcher.matches([1]))
@@ -130,7 +130,7 @@ final class ExpressionTests: XCTestCase {
     }
 
     func test_matchAnythingContaining123() {
-        let expression: Expression<Int> = .whatever + .require([1, 2, 3]) + .whatever
+        let expression: Expression<Int> = .anything + .require([1, 2, 3]) + .anything
         let matcher = createMatcher(for: expression)
         
         XCTAssertTrue(matcher.matches([1, 2, 3]))
