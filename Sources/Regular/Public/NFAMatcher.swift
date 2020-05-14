@@ -15,7 +15,7 @@ private func nfaMatcher<Symbol>(for expression: Expression<Symbol>) -> NFA<Symbo
     case .empty: return .empty
     case .some: return .some
 
-    case .any1: return .any
+    case .any1: return .dot
         
     case let .require(predicate): return .symbol(predicate)
     case let .reject(predicate): return .symbol { !predicate($0) }

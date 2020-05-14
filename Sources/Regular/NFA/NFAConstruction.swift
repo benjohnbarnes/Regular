@@ -5,7 +5,7 @@
 extension NFA {
     
     static var all: NFA {
-        return self.any.zeroOrMore
+        return self.dot.zeroOrMore
     }
     
     static var zero: NFA {
@@ -27,7 +27,7 @@ extension NFA {
         !empty
     }
 
-    static var any: NFA {
+    static var dot: NFA {
         symbol { _ in true }
     }
     
@@ -54,14 +54,6 @@ extension NFA {
         )
     }
 
-    var optional: NFA {
-        self | .empty
-    }
-    
-    var zeroOrMore: NFA {
-        oneOrMore | .empty
-    }
-    
     var oneOrMore: NFA {
         let loopEpsilonEdges = initialStates.map { initialState in
             return EpsilonEdge(source: acceptanceState, target: initialState, isActive: true)
@@ -73,6 +65,14 @@ extension NFA {
             predicateEdges: predicateEdges,
             epsilonEdges: epsilonEdges + loopEpsilonEdges
         )
+    }
+    
+    var zeroOrMore: NFA {
+        oneOrMore | .empty
+    }
+    
+    var optional: NFA {
+        self | .empty
     }
     
     static func |(_ l: NFA, _ r: NFA) -> NFA {

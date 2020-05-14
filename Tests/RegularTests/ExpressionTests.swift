@@ -289,26 +289,5 @@ final class ExpressionTests: XCTestCase {
         XCTAssertFalse(matcher.matches([1, 2, 1, 1]))
         XCTAssertFalse(matcher.matches([1, 2, 1, 1, 1, 2, 1]))
     }
-    
-    func test_pairsDebugging() {
-         let one: Expression<Int> = .require(1)
-         let two: Expression<Int> = .require(2)
-         let thing = (two.zeroOrMore + one).zeroOrMore
-         let matcher = createMatcher(for: thing)
-
-         XCTAssertTrue(matcher.matches([]))
-         XCTAssertTrue(matcher.matches([1]))
-         XCTAssertTrue(matcher.matches([1, 1]))
-     }
-
-    func test_pairsDebugging2() {
-         let one: Expression<Int> = .require(1)
-         let two: Expression<Int> = .require(2)
-         let thing = (two.zeroOrMore + one).oneOrMore
-         let matcher = createMatcher(for: thing)
-
-         XCTAssertTrue(matcher.matches([1]))
-         XCTAssertTrue(matcher.matches([1, 1]))
-     }
 }
 
