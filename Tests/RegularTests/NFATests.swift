@@ -302,15 +302,19 @@ final class NFATests: XCTestCase {
     
     func test_epsilonCycle() {
         let matcher = (empty + dot).oneOrMore
-
-         XCTAssertTrue(matcher.matches([1]))
-         XCTAssertTrue(matcher.matches([1, 1]))
-         XCTAssertTrue(matcher.matches([1, 1, 1]))
-         XCTAssertTrue(matcher.matches([1, 1, 1, 1, 1, 1, 1, 1]))
-     }
+        
+        // The failures here are because the oneOrMore's loop is applied _after_ the edge between empty and
+        // dot, so dot is not able to relaunch itself. Changing to transitive closure should fix this, but
+        // that requires an answer to how negative edges behave in cycles.
+        XCTAssertTrue(matcher.matches([1]))
+        XCTAssertTrue(matcher.matches([1, 1]))
+        XCTAssertTrue(matcher.matches([1, 1, 1]))
+        XCTAssertTrue(matcher.matches([1, 1, 1, 1, 1, 1, 1, 1]))
+    }
 
     func test_negativeEpsilonCycle() {
-        let matcher = some.oneOrMore
+        // `!empty` introduces a negative edge. `oneOrMore` loops this. 
+        let matcher = (!empty).oneOrMore
         
         XCTAssertTrue(matcher.matches([1]))
         XCTAssertTrue(matcher.matches([1, 1]))
