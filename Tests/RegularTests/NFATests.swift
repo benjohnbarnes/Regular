@@ -311,9 +311,9 @@ final class NFATests: XCTestCase {
      }
 
     func test_pairsDebugging2() {
-        let one: NFA<Int> = .symbol { $0 == 1 }
+        let any: NFA<Int> = .any
         let empty: NFA<Int> = .empty
-        let matcher = (empty + one).oneOrMore
+        let matcher = (empty + any).oneOrMore
 
          XCTAssertTrue(matcher.matches([1]))
          XCTAssertTrue(matcher.matches([1, 1]))
