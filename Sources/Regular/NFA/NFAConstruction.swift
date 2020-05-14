@@ -8,13 +8,13 @@ extension NFA {
         return self.any.zeroOrMore
     }
     
-    static var none: NFA {
+    static var zero: NFA {
         !all
     }
     
     static var empty: NFA {
         let node = Node()
-        
+
         return NFA(
             initialStates: .init([node]),
             acceptanceState: node,

@@ -49,7 +49,7 @@ public indirect enum Expression<Symbol> {
     //
     // There is no RegEx equivalent to this.
     //
-    // This has a `var` form so you can write `someExpression.not` rather than `.not(someExpression).
+    // You can write `!someExpression` rather than `.not(someExpression).
     //
     // Note that negation may not behave as you expect. Negation of an expression is a new expression matching
     // _everything_ that the expression does not match. `!.require { $0 == 1 }` matches _everything except_ the
@@ -142,17 +142,13 @@ public extension Expression {
     var oneOrMore: Expression {
         .oneOrMore(self)
     }
-    
-    var not: Expression {
-        .not(self)
-    }
 }
 
 // MARK:- Repetition {
 
 public extension Expression {
     
-    func repeated(count: Int) -> Expression {
+    func repeated(count: Int, joinedBy join: Expression = .empty) -> Expression {
         Array(repeating: self, count: count).reduce(.empty, +)
     }
     

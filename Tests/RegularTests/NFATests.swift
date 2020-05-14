@@ -17,7 +17,7 @@ final class NFATests: XCTestCase {
     }
 
     func test_none() {
-        let nfa = NFA<Int>.none
+        let nfa = NFA<Int>.zero
 
         XCTAssertFalse(nfa.matches([]))
         XCTAssertFalse(nfa.matches([1]))
@@ -296,9 +296,30 @@ final class NFATests: XCTestCase {
     }
 
     func test_NoneStarMatchesEmpty() {
-        let nfa: NFA<Int> = NFA<Int>.none.zeroOrMore
+        let nfa: NFA<Int> = NFA<Int>.zero.zeroOrMore
         XCTAssertTrue(nfa.matches([]))
     }
+    
+    func test_pairsDebugging() {
+        let one: NFA<Int> = .symbol { $0 == 1 }
+        let empty: NFA<Int> = .empty
+        let matcher = (empty.oneOrMore + one).oneOrMore
+
+         XCTAssertTrue(matcher.matches([1]))
+         XCTAssertTrue(matcher.matches([1, 1]))
+         XCTAssertTrue(matcher.matches([1, 1, 1]))
+     }
+
+    func test_pairsDebugging2() {
+        let one: NFA<Int> = .symbol { $0 == 1 }
+        let empty: NFA<Int> = .empty
+        let matcher = (empty + one).oneOrMore
+
+         XCTAssertTrue(matcher.matches([1]))
+         XCTAssertTrue(matcher.matches([1, 1]))
+         XCTAssertTrue(matcher.matches([1, 1, 1]))
+     }
+
 }
 
 // MARK: -

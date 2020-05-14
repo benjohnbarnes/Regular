@@ -110,6 +110,48 @@ final class ExpressionTests: XCTestCase {
         XCTAssertFalse(matcher.matches([1, 2]))
     }
 
+    func test_zeroOrMore() {
+        let one: Expression<Int> = .require(1)
+        let zeroOrMoreOnes = one.zeroOrMore
+        let matcher = createMatcher(for: zeroOrMoreOnes)
+
+        XCTAssertTrue(matcher.matches([]))
+        XCTAssertTrue(matcher.matches([1]))
+        XCTAssertTrue(matcher.matches([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))
+        
+        XCTAssertFalse(matcher.matches([2]))
+        XCTAssertFalse(matcher.matches([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2]))
+        XCTAssertFalse(matcher.matches([2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))
+        XCTAssertFalse(matcher.matches([1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1]))
+    }
+
+    func test_oneOrMore() {
+        let one: Expression<Int> = .require(1)
+        let zeroOrMoreOnes = one.oneOrMore
+        let matcher = createMatcher(for: zeroOrMoreOnes)
+
+        XCTAssertTrue(matcher.matches([1]))
+        XCTAssertTrue(matcher.matches([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))
+        
+        XCTAssertFalse(matcher.matches([]))
+        XCTAssertFalse(matcher.matches([2]))
+        XCTAssertFalse(matcher.matches([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2]))
+        XCTAssertFalse(matcher.matches([2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))
+        XCTAssertFalse(matcher.matches([1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1]))
+    }
+
+    func test_optional() {
+        let one: Expression<Int> = .require(1)
+        let optional = one.optional
+        let matcher = createMatcher(for: optional)
+
+        XCTAssertTrue(matcher.matches([]))
+        XCTAssertTrue(matcher.matches([1]))
+
+        XCTAssertFalse(matcher.matches([2]))
+        XCTAssertFalse(matcher.matches([1, 1]))
+    }
+    
     func test_aSequenceHavingA1() {
         
         let expression: Expression<Int> = .anything + .require(1) + .anything
@@ -149,6 +191,22 @@ final class ExpressionTests: XCTestCase {
     
     func test_repeated() {
         let expression: Expression<Int> = Expression.any1.repeated(count: 4)
+        let matcher = createMatcher(for: expression)
+        
+        XCTAssertTrue(matcher.matches([1, 1, 1, 1]))
+        XCTAssertTrue(matcher.matches([2, 2, 2, 2]))
+        XCTAssertTrue(matcher.matches([1, 2, 3, 4]))
+
+        XCTAssertFalse(matcher.matches([]))
+        XCTAssertFalse(matcher.matches([1]))
+        XCTAssertFalse(matcher.matches([1, 1]))
+        XCTAssertFalse(matcher.matches([1, 1, 1]))
+
+        XCTAssertFalse(matcher.matches([1, 1, 1, 1, 1]))
+    }
+    
+    func test_repeatedJoinedBy() {
+        let expression: Expression<Int> = Expression.any1.repeated(count: 4, joinedBy: .require(1))
         let matcher = createMatcher(for: expression)
         
         XCTAssertTrue(matcher.matches([1, 1, 1, 1]))
@@ -205,4 +263,52 @@ final class ExpressionTests: XCTestCase {
 
         XCTAssertFalse(matcher.matches([1, 1, 1, 1, 1]))
     }
+    
+    func test_even1s() {
+        let one: Expression<Int> = .require(1)
+        let notOne: Expression<Int> = .reject(1)
+        let paddedOne = notOne.zeroOrMore + one + notOne.zeroOrMore
+        let pairOf1s = paddedOne + paddedOne
+        let evenOnes = pairOf1s.zeroOrMore
+        let matcher = createMatcher(for: evenOnes)
+
+        XCTAssertTrue(matcher.matches([]))
+        XCTAssertTrue(matcher.matches([1, 1]))
+        XCTAssertTrue(matcher.matches([1, 1, 1, 1]))
+        XCTAssertTrue(matcher.matches([1, 1, 3, 1, 1]))
+
+        XCTAssertTrue(matcher.matches([1, 2, 1]))
+        XCTAssertTrue(matcher.matches([2, 1, 2, 1, 3]))
+        XCTAssertTrue(matcher.matches([2, 1, 2, 2, 2, 5, 1, 3]))
+        XCTAssertTrue(matcher.matches([2, 1, 2, 1, 2, 2, 5, 1, 3, 1]))
+        
+        XCTAssertTrue(matcher.matches([1, 2, 1, 1, 2, 1, 2, 2, 5, 1, 3, 1]))
+        XCTAssertTrue(matcher.matches([1, 1, 1, 1, 1, 1]))
+
+        XCTAssertFalse(matcher.matches([1]))
+        XCTAssertFalse(matcher.matches([1, 2, 1, 1]))
+        XCTAssertFalse(matcher.matches([1, 2, 1, 1, 1, 2, 1]))
+    }
+    
+    func test_pairsDebugging() {
+         let one: Expression<Int> = .require(1)
+         let two: Expression<Int> = .require(2)
+         let thing = (two.zeroOrMore + one).zeroOrMore
+         let matcher = createMatcher(for: thing)
+
+         XCTAssertTrue(matcher.matches([]))
+         XCTAssertTrue(matcher.matches([1]))
+         XCTAssertTrue(matcher.matches([1, 1]))
+     }
+
+    func test_pairsDebugging2() {
+         let one: Expression<Int> = .require(1)
+         let two: Expression<Int> = .require(2)
+         let thing = (two.zeroOrMore + one).oneOrMore
+         let matcher = createMatcher(for: thing)
+
+         XCTAssertTrue(matcher.matches([1]))
+         XCTAssertTrue(matcher.matches([1, 1]))
+     }
 }
+

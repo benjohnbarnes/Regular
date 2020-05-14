@@ -11,7 +11,7 @@ public func createMatcher<Symbol>(for expression: Expression<Symbol>) -> AnyMatc
 private func nfaMatcher<Symbol>(for expression: Expression<Symbol>) -> NFA<Symbol> {
     switch expression {
     case .anything: return .all
-    case .zero: return .none
+    case .zero: return .zero
     case .empty: return .empty
     case .some: return .some
 
