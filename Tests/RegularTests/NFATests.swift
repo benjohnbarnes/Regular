@@ -300,25 +300,25 @@ final class NFATests: XCTestCase {
         XCTAssertTrue(nfa.matches([]))
     }
     
-    func test_pairsDebugging2() {
+    func test_epsilonCycle() {
         let matcher = (empty + dot).oneOrMore
 
          XCTAssertTrue(matcher.matches([1]))
          XCTAssertTrue(matcher.matches([1, 1]))
          XCTAssertTrue(matcher.matches([1, 1, 1]))
+         XCTAssertTrue(matcher.matches([1, 1, 1, 1, 1, 1, 1, 1]))
      }
 
-    func test_somePlus() {
+    func test_negativeEpsilonCycle() {
         let matcher = some.oneOrMore
-
-         XCTAssertTrue(matcher.matches([1]))
-         XCTAssertTrue(matcher.matches([1, 1]))
-         XCTAssertTrue(matcher.matches([1, 1, 1]))
+        
+        XCTAssertTrue(matcher.matches([1]))
+        XCTAssertTrue(matcher.matches([1, 1]))
+        XCTAssertTrue(matcher.matches([1, 1, 1]))
         XCTAssertTrue(matcher.matches([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))
-
+        
         XCTAssertFalse(matcher.matches([]))
      }
-
 }
 
 // MARK: -
