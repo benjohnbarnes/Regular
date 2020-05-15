@@ -6,7 +6,7 @@ struct NFA<Symbol> {
     let initialStates: Set<Node>
     let acceptanceState: Node
     let predicateEdges: [Node: [Node: [Predicate]]]
-    let epsilonEdges: [EpsilonEdge]
+    let epsilonEdges: EpsilonEdges
     typealias Predicate = (Symbol) -> Bool
 }
 
@@ -39,15 +39,7 @@ private extension NFA {
     }
     
     private func propagateEpsilonEdges(fromActiveStates activeStates: MachineState) -> MachineState {
-        var activeStates = activeStates
-        
-        for epsilonEdge in epsilonEdges {
-            if activeStates.contains(epsilonEdge.source) == epsilonEdge.isActive {
-                activeStates.insert(epsilonEdge.target)
-            }
-        }
-        
-        return activeStates
+        epsilonEdges.propagate(state: activeStates)
     }
 
     func stateRepresentsAcceptance(_ activeStates: MachineState) -> Bool {

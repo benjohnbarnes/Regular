@@ -67,15 +67,7 @@ final class NFATests: XCTestCase {
         XCTAssertFalse(nfa.matches([1]))
     }
     
-    func test_match1Or2_andNot1_matches2AndNot1() {
-        let nfa = NFA<Int>.symbol({ 1...2 ~= $0 }) & !one
-        
-        XCTAssertTrue(nfa.matches([2]))
-
-        XCTAssertFalse(nfa.matches([1]))
-    }
-    
-    func test_1Or2Or2Or3_matches1Or2Or3() {
+    func test_1Or2Or2Or3() {
         let nfa = NFA<Int>.symbol({ 1...2 ~= $0 }) | NFA<Int>.symbol({ 2...3 ~= $0 })
 
         XCTAssertTrue(nfa.matches([1]))
@@ -88,8 +80,45 @@ final class NFATests: XCTestCase {
         XCTAssertFalse(nfa.matches([4]))
     }
 
+    func test_not1Or2Or2Or3() {
+        let nfa = !(NFA<Int>.symbol({ 1...2 ~= $0 }) | NFA<Int>.symbol({ 2...3 ~= $0 }))
+
+        XCTAssertFalse(nfa.matches([1]))
+        XCTAssertFalse(nfa.matches([2]))
+        XCTAssertFalse(nfa.matches([3]))
+
+        XCTAssertTrue(nfa.matches([]))
+        XCTAssertTrue(nfa.matches([1,2]))
+        XCTAssertTrue(nfa.matches([2,1]))
+        XCTAssertTrue(nfa.matches([4]))
+    }
+
+    func test_orAnihillation() {
+        let nfa = NFA<Int>.zero | NFA<Int>.all
+
+        XCTAssertTrue(nfa.matches([]))
+        XCTAssertTrue(nfa.matches([1]))
+        XCTAssertTrue(nfa.matches([1, 2]))
+    }
+    
+    func test_andAnihillation() {
+        let nfa = NFA<Int>.zero & NFA<Int>.all
+
+        XCTAssertFalse(nfa.matches([]))
+        XCTAssertFalse(nfa.matches([1]))
+        XCTAssertFalse(nfa.matches([1, 2]))
+    }
+    
+    func test_match1Or2_andNot1_matches2AndNot1() {
+        let nfa = NFA<Int>.symbol { 1...2 ~= $0 } & !NFA<Int>.symbol { $0 != 1}
+        
+        XCTAssertTrue(nfa.matches([2]))
+
+        XCTAssertFalse(nfa.matches([1]))
+    }
+    
     func test_1Or2And2Or3_matchesOnly2() {
-        let nfa = NFA<Int>.symbol({ 1...2 ~= $0 }) & NFA<Int>.symbol({ 2...3 ~= $0 })
+        let nfa = NFA<Int>.symbol { 1...2 ~= $0 } & NFA<Int>.symbol { 2...3 ~= $0 }
 
         XCTAssertTrue(nfa.matches([2]))
 
@@ -313,7 +342,7 @@ final class NFATests: XCTestCase {
     }
 
     func test_negativeEpsilonCycle() {
-        // `!empty` introduces a negative edge. `oneOrMore` loops this. 
+        // `!empty` introduces a negative edge. `oneOrMore` loops this.
         let matcher = (!empty).oneOrMore
         
         XCTAssertTrue(matcher.matches([1]))

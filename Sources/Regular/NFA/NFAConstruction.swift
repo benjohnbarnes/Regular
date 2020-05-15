@@ -45,25 +45,24 @@ extension NFA {
     
     static prefix func !(_ nfa: NFA) -> NFA {
         let newAcceptance = Node()
-        
+        let inversionEdges = EpsilonEdges([(nfa.acceptanceState, newAcceptance)]).inverted
+
         return NFA(
             initialStates: nfa.initialStates,
             acceptanceState: newAcceptance,
             predicateEdges: nfa.predicateEdges,
-            epsilonEdges: nfa.epsilonEdges + [EpsilonEdge(source: nfa.acceptanceState, target: newAcceptance, isActive: false)]
+            epsilonEdges: nfa.epsilonEdges.merging(inversionEdges)
         )
     }
 
     var oneOrMore: NFA {
-        let loopEpsilonEdges = initialStates.map { initialState in
-            return EpsilonEdge(source: acceptanceState, target: initialState, isActive: true)
-        }
-        
+        let loopEpsilonEdges = EpsilonEdges(initialStates.map { initialState in (acceptanceState, initialState) })
+            
         return NFA(
             initialStates: initialStates,
             acceptanceState: acceptanceState,
             predicateEdges: predicateEdges,
-            epsilonEdges: epsilonEdges + loopEpsilonEdges
+            epsilonEdges: epsilonEdges.merging(loopEpsilonEdges)
         )
     }
     
@@ -77,28 +76,28 @@ extension NFA {
     
     static func |(_ l: NFA, _ r: NFA) -> NFA {
         let acceptance = Node()
-        let extraEpsilon = [l.acceptanceState, r.acceptanceState].map { EpsilonEdge(source: $0, target: acceptance, isActive: true) }
+        let combineEpsilon = EpsilonEdges([(l.acceptanceState, acceptance), (r.acceptanceState, acceptance)])
         
         return NFA(
             initialStates: l.initialStates.union(r.initialStates),
             acceptanceState: acceptance,
             predicateEdges: l.predicateEdges.merging(r.predicateEdges, uniquingKeysWith: { _, _ in fatalError("Logic error") }),
-            epsilonEdges: r.epsilonEdges + l.epsilonEdges + extraEpsilon
+            epsilonEdges: r.epsilonEdges.merging(l.epsilonEdges).merging(combineEpsilon)
         )
     }
 
     static func &(_ l: NFA, _ r: NFA) -> NFA {
-        !((!l) | (!r))
+        !(!l | !r)
     }
 
     static func +(_ l: NFA, _ r: NFA) -> NFA {
-        let joinEpsilonEdges = r.initialStates.map { EpsilonEdge(source: l.acceptanceState, target: $0, isActive: true) }
+        let joinEpsilonEdges = EpsilonEdges(r.initialStates.map { rInitialState in (l.acceptanceState, rInitialState) })
 
         return NFA(
             initialStates: l.initialStates,
             acceptanceState: r.acceptanceState,
             predicateEdges: l.predicateEdges.merging(r.predicateEdges, uniquingKeysWith: { _, _ in fatalError("Logic error") }),
-            epsilonEdges: l.epsilonEdges + joinEpsilonEdges + r.epsilonEdges
+            epsilonEdges: l.epsilonEdges.merging(r.epsilonEdges).merging(joinEpsilonEdges)
         )
     }
 }
