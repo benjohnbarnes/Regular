@@ -8,7 +8,7 @@ import XCTest
 final class NFATests: XCTestCase {
     
     func test_all() {
-        let nfa = all
+        let nfa: NFA<Int> = .all
 
         XCTAssertTrue(nfa.matches([]))
         XCTAssertTrue(nfa.matches([1]))
@@ -16,8 +16,8 @@ final class NFATests: XCTestCase {
         XCTAssertTrue(nfa.matches([1, 2, 3, 4, 5, 6, 7]))
     }
 
-    func test_none() {
-        let nfa = NFA<Int>.zero
+    func test_zero() {
+        let nfa: NFA<Int> = .zero
 
         XCTAssertFalse(nfa.matches([]))
         XCTAssertFalse(nfa.matches([1]))
@@ -103,6 +103,14 @@ final class NFATests: XCTestCase {
     
     func test_andAnihillation() {
         let nfa = NFA<Int>.zero & NFA<Int>.all
+
+        XCTAssertFalse(nfa.matches([]))
+        XCTAssertFalse(nfa.matches([1]))
+        XCTAssertFalse(nfa.matches([1, 2]))
+    }
+    
+    func test_zeroAndZero() {
+        let nfa = NFA<Int>.zero & NFA<Int>.zero
 
         XCTAssertFalse(nfa.matches([]))
         XCTAssertFalse(nfa.matches([1]))

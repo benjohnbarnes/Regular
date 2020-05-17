@@ -4,14 +4,6 @@
 
 extension NFA {
     
-    static var all: NFA {
-        return self.dot.zeroOrMore
-    }
-    
-    static var zero: NFA {
-        !all
-    }
-    
     static var empty: NFA {
         let node = Node()
 
@@ -21,6 +13,14 @@ extension NFA {
             predicateEdges: .init(),
             epsilonEdges: .init()
         )
+    }
+    
+    static var all: NFA {
+        return empty | !empty
+    }
+    
+    static var zero: NFA {
+        !all
     }
     
     static var some: NFA {
