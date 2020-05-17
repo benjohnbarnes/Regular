@@ -6,29 +6,24 @@ import Foundation
 
 struct EpsilonEdges {
     let activeEdges: [Node: Set<Node>]
-    let innactiveEdges: [Node: Set<Node>]
 
     init() {
         self.init(
-            activeEdges: [:],
-            innactiveEdges: [:]
+            activeEdges: [:]
         )
     }
     
     init<S: Sequence>(_ s: S) where S.Element == (Node, Node) {
         self.init(
-            activeEdges: Dictionary(grouping: s, by: { $0.0 }).mapValues { Set($0.map { $0.1 }) },
-            innactiveEdges: [:]
+            activeEdges: Dictionary(grouping: s, by: { $0.0 }).mapValues { Set($0.map { $0.1 }) }
         )
     }
 
     private init(
-        activeEdges: [Node: Set<Node>],
-        innactiveEdges: [Node: Set<Node>]
+        activeEdges: [Node: Set<Node>]
     ) {
         let closeNodes = fix { nodes -> Set<Node> in nodes.union(nodes.flatMap { activeEdges[$0] ?? [] }) }        
         self.activeEdges = activeEdges.mapValues(closeNodes)
-        self.innactiveEdges = innactiveEdges
     }
 }
 
@@ -36,8 +31,7 @@ extension EpsilonEdges {
  
     static func +(_ l: EpsilonEdges, _ r: EpsilonEdges) -> EpsilonEdges {
         EpsilonEdges(
-            activeEdges: l.activeEdges.merging(r.activeEdges, uniquingKeysWith: { $0.union($1) }),
-            innactiveEdges: l.innactiveEdges.merging(r.innactiveEdges, uniquingKeysWith: { $0.union($1) })
+            activeEdges: l.activeEdges.merging(r.activeEdges, uniquingKeysWith: { $0.union($1) })
         )
     }
     
@@ -45,12 +39,8 @@ extension EpsilonEdges {
         self + edges
     }
     
-    var inverted: EpsilonEdges {
-        .init(activeEdges: innactiveEdges, innactiveEdges: activeEdges)
-    }
-
     func propagate(state: Set<Node>) -> Set<Node> {
-        propagatePositiveEdges(propagateNegativeEdges(propagatePositiveEdges(state)))
+        propagatePositiveEdges(state)
     }
     
     private func propagatePositiveEdges(_ nodes: Set<Node>) -> Set<Node> {
@@ -61,13 +51,6 @@ extension EpsilonEdges {
         }
         
         return nodes
-    }
-
-    private func propagateNegativeEdges(_ nodes: Set<Node>) -> Set<Node> {
-        nodes.union(innactiveEdges.flatMap { innactiveRecord -> [Node] in
-            guard nodes.contains(innactiveRecord.key) == false else { return [] }
-            return Array(innactiveRecord.value)
-        })
     }
 }
 
