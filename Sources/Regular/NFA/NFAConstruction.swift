@@ -4,6 +4,26 @@
 
 extension NFA {
     
+    static var all: NFA {
+        return empty | some
+    }
+    
+    static var zero: NFA {
+        let initial = Node()
+        let accept = Node()
+
+        return NFA(
+            initialStates: .init([initial]),
+            acceptanceState: accept,
+            predicateEdges: .init(),
+            epsilonEdges: .init()
+        )
+    }
+    
+    static var some: NFA {
+        dot.oneOrMore
+    }
+
     static var empty: NFA {
         let node = Node()
 
@@ -15,18 +35,6 @@ extension NFA {
         )
     }
     
-    static var all: NFA {
-        return empty | !empty
-    }
-    
-    static var zero: NFA {
-        !all
-    }
-    
-    static var some: NFA {
-        !empty
-    }
-
     static var dot: NFA {
         symbol { _ in true }
     }
@@ -43,18 +51,6 @@ extension NFA {
         )
     }
     
-    static prefix func !(_ nfa: NFA) -> NFA {
-        let newAcceptance = Node()
-        let inversionEdges = EpsilonEdges([(nfa.acceptanceState, newAcceptance)]).inverted
-
-        return NFA(
-            initialStates: nfa.initialStates,
-            acceptanceState: newAcceptance,
-            predicateEdges: nfa.predicateEdges,
-            epsilonEdges: nfa.epsilonEdges.merging(inversionEdges)
-        )
-    }
-
     var oneOrMore: NFA {
         let loopEpsilonEdges = EpsilonEdges(initialStates.map { initialState in (acceptanceState, initialState) })
             
@@ -84,10 +80,6 @@ extension NFA {
             predicateEdges: l.predicateEdges.merging(r.predicateEdges, uniquingKeysWith: { _, _ in fatalError("Logic error") }),
             epsilonEdges: r.epsilonEdges.merging(l.epsilonEdges).merging(combineEpsilon)
         )
-    }
-
-    static func &(_ l: NFA, _ r: NFA) -> NFA {
-        !(!l | !r)
     }
 
     static func +(_ l: NFA, _ r: NFA) -> NFA {

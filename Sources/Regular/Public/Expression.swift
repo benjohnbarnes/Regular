@@ -44,20 +44,6 @@ public indirect enum Expression<Symbol> {
     case oneOrMore(Expression)  // Like appending `+` to a RegEx.
     case zeroOrMore(Expression) // Like appending `*` to a RegEx.
     
-    // Negate an expression. This forms an expression that matching everything that the underlying expression will
-    // not match, and nothing that it will match. This is also known as "complement".
-    //
-    // There is no RegEx equivalent to this.
-    //
-    // You can write `!someExpression` rather than `.not(someExpression).
-    //
-    // Note that negation may not behave as you expect. Negation of an expression is a new expression matching
-    // _everything_ that the expression does not match. `!.require { $0 == 1 }` matches _everything except_ the
-    // symbol 1. This _includes the empty sequence_, and any sequence of any length, provided it is not a sequence of
-    // a single 1. If you just want to matching a single thing that is not a 1, use `.reject { $0 == 1}`
-    //
-    case not(Expression)
-    
     // Sequentially combine expressions. Also called "concatenation"
     //
     // In regular expressions this is implicit. So, give /e1/ and /e2/ we would combine them by writing /e1e2/.
@@ -67,20 +53,10 @@ public indirect enum Expression<Symbol> {
     //
     case then(Expression, Expression)
 
-    // Logically combine expressions.
-    //
-    // In regular expressions, given /e1/ and /e2/, we can match to _either_ of these with /e1|e2/, so the `or`
-    // Boolean combination is supported in RegEx. RegEx don't support other Boolean combinations.
-    //
-    // The all have operators defined, so you can write:
-    //    `expression1 | expression2`
-    //    `expression1 & expression2`
-    //    `expression1 ^ expression2`
+    // Logically combine expressions to give an expression that matches if either of the sub expressions match.
     //
     case or(Expression, Expression)
-    case and(Expression, Expression)
-    case xor(Expression, Expression)
-    
+
     // Match only the empty sequence. This is the identity element for concatenation.
     //
     // Equivalent to RegEx //.
@@ -97,39 +73,22 @@ public indirect enum Expression<Symbol> {
     public typealias Predicate = (Symbol) -> Bool
 }
 
-// MARK:- Sequencing
+// MARK:- Combining
 
 public extension Expression {
+
+    static func |(_ a: Expression, _ b: Expression) -> Expression {
+        .or(a, b)
+    }
 
     static func +(_ first: Expression, _ second: Expression) -> Expression {
         .then(first, second)
     }
 }
 
-// MARK:- Logically combine
-    
-public extension Expression {
-
-    static func |(_ a: Expression, _ b: Expression) -> Expression {
-        .or(a, b)
-    }
-    
-    static func &(_ a: Expression, _ b: Expression) -> Expression {
-        .and(a, b)
-    }
-    
-    static func ^(_ a: Expression, _ b: Expression) -> Expression {
-        .xor(a, b)
-    }
-}
-
 // MARK:- Expression modifiers
 
 public extension Expression {
-
-    static prefix func !(_ e: Expression) -> Expression {
-        .not(e)
-    }
 
     var optional: Expression {
         .optional(self)

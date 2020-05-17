@@ -23,12 +23,8 @@ private func nfaMatcher<Symbol>(for expression: Expression<Symbol>) -> NFA<Symbo
     case let .optional(expression): return nfaMatcher(for: expression).optional
     case let .oneOrMore(expression): return nfaMatcher(for: expression).oneOrMore
     case let .zeroOrMore(expression): return nfaMatcher(for: expression).zeroOrMore
-    case let .not(expression): return !nfaMatcher(for: expression)
 
     case let .or(e1, e2): return nfaMatcher(for: e1) | nfaMatcher(for: e2)
-    case let .and(e1, e2): return nfaMatcher(for: e1) & nfaMatcher(for: e2)
-    case let .xor(e1, e2): return (nfaMatcher(for: e1) & !nfaMatcher(for: e2)) | (!nfaMatcher(for: e1) & nfaMatcher(for: e2))
-
     case let .then(e1, e2): return nfaMatcher(for: e1) + nfaMatcher(for: e2)
     }
 }

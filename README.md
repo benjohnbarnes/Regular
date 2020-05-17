@@ -5,8 +5,9 @@ A Swift [regular expression](https://en.wikipedia.org/wiki/Regular_language) lib
 * **Generically typed symbols** – Not only `String`s of `Character`, but _all_ Swift types in any `Sequence`.
 * **Predicate based symbol matching** – Define match conditions on symbols such as `.require { $0.speed < 30 }`,
 `.require { $0.color.isFairlyRed }`, or `require { $0.networkEvent.completedWithoutError }`.
-* **Expression negation** – Regular provides `!`, `&` and `^` in expressions, and supports _every_ boolean function of subexpressions, not only `|` as is the case with RegEx matchers.
 * **Linear run time** and constant memory use in the input sequence length.
+
+Regular doesn't currently support expression negation, but it is an ambition to add this.
 
 # What is Regular for?
 
@@ -30,6 +31,6 @@ contant space, and various optimisations could be made without a change of API.
 Regular is currently work in progress. However, Regular has an NFA based matching implementation, and an API for creating expressions 
 and building matchers from them.
 
-- [ ] Expression Tests of composites and modifiers.
 - [ ] Check it's actually useful for building expressions and matchers.
 - [ ] Ensure naming in expression algebra isn't overly verbose.
+- [ ] Support negation.
